@@ -49,6 +49,17 @@ button, [role="button"], a, input, select, textarea {
   outline: none;
 }
 
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+  button, .btn, a[role="button"] {
+    min-height: 44px;
+  }
+  
+  input, select, textarea {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+}
+
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -218,4 +229,39 @@ select.field optgroup {
     scroll-behavior: auto !important;
   }
   .reveal { opacity: 1; transform: none; }
+}
+
+/* Mobile responsiveness utilities */
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Ensure mobile padding */
+@media (max-width: 640px) {
+  .glass {
+    padding: 16px;
+  }
+  
+  body {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  }
 }

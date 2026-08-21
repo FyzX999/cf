@@ -99,6 +99,7 @@ function slugify(platform: PlatformSlug, category: string) {
 export const services: Service[] = platforms.flatMap((platform, pIndex) =>
   seeds[platform.slug].map((seed, sIndex) => {
     const premium = seed.refill && seed.rate < 5;
+    const isDiscord = platform.slug === "discord";
     return {
       id: `${pIndex + 1}${String(sIndex + 1).padStart(2, "0")}`,
       platform: platform.slug,
@@ -118,6 +119,7 @@ export const services: Service[] = platforms.flatMap((platform, pIndex) =>
       priceMode: "multiplier" as const,
       visible: true,
       active: true,
+      manual: isDiscord,
       providerServiceId: null,
       startTime: seed.rate < 0.2 ? "0–5 min" : "5–30 min",
       popularity: 100 - pIndex * 8 - sIndex * 3,

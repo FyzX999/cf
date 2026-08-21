@@ -53,6 +53,7 @@ export type Service = {
   priceMode: "multiplier" | "fixed";
   visible: boolean;
   active: boolean;
+  manual: boolean;
   providerServiceId: number | null;
   providerName?: string | null;
   startTime: string;
@@ -74,6 +75,7 @@ export type ServiceOverride = Partial<{
   passwordRequired: boolean;
   visible: boolean;
   active: boolean;
+  manual: boolean;
   providerServiceId: number | null;
   markupMultiplier: number;
   priceMode: PriceMode;

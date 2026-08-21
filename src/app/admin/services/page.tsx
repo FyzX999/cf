@@ -181,8 +181,8 @@ export default function AdminServicesPage() {
       {saved && <p className="mb-4 text-sm text-[#3ddc97]">{saved}</p>}
 
       <div className="mb-6 flex flex-wrap items-end gap-3">
-        <input className="field max-w-xs" placeholder="Search services" value={q} onChange={(e) => setQ(e.target.value)} />
-        <select className="field max-w-[160px] cursor-pointer" value={platform} onChange={(e) => setPlatform(e.target.value)}>
+        <input className="field w-full max-w-xs" placeholder="Search services" value={q} onChange={(e) => setQ(e.target.value)} />
+        <select className="field w-full max-w-[160px] cursor-pointer" value={platform} onChange={(e) => setPlatform(e.target.value)}>
           <option value="all">All platforms</option>
           {platforms.map((p) => (
             <option key={p} value={p} className="capitalize">
@@ -201,10 +201,10 @@ export default function AdminServicesPage() {
             onChange={(e) => setBulkMultiplier(Number(e.target.value))}
           />
         </label>
-        <button className="btn btn-ghost" disabled={busy} onClick={applyBulkMultiplier}>
+        <button className="btn btn-ghost w-full sm:w-auto" disabled={busy} onClick={applyBulkMultiplier}>
           Apply to filtered
         </button>
-        <button className="btn btn-primary" disabled={busy} onClick={() => save(Object.keys(drafts))}>
+        <button className="btn btn-primary w-full sm:w-auto" disabled={busy} onClick={() => save(Object.keys(drafts))}>
           {busy ? "Saving…" : "Save all"}
         </button>
       </div>

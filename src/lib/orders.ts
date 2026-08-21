@@ -239,6 +239,12 @@ async function attachProvider(serviceId: string, link: string, quantity: number,
   if (!isProviderConfigured()) return undefined;
   const service = await getLiveServiceById(serviceId);
   if (!service) throw new Error("Service not found");
+  
+  // Skip provider submission for manual services (e.g., Discord)
+  if (service.manual) {
+    return undefined;
+  }
+  
   const providerServiceId = await resolveProviderServiceId(service);
   if (!providerServiceId) {
     throw new Error(

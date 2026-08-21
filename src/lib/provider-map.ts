@@ -88,9 +88,10 @@ export function markupRate(providerRate: number, multiplier?: number) {
 }
 
 export async function resolveProviderServiceId(catalog: Service) {
+  // Priority: 1. Service's own providerServiceId, 2. Env variable map, 3. Auto-match
+  if (catalog.providerServiceId) return catalog.providerServiceId;
   const overrides = overrideMap();
   if (overrides[catalog.id]) return overrides[catalog.id];
-  if (catalog.providerServiceId) return catalog.providerServiceId;
   const provider = await listProviderServicesCached();
   return matchProviderService(catalog, provider)?.service ?? null;
 }
@@ -104,7 +105,8 @@ export async function mappedCatalogServices() {
   const overrides = overrideMap();
   return catalog.map((service) => {
     const matched = matchProviderService(service, provider);
-    const providerServiceId = overrides[service.id] ?? service.providerServiceId ?? matched?.service ?? null;
+    // Priority: 1. Service's own providerServiceId, 2. Env variable map, 3. Auto-match
+    const providerServiceId = service.providerServiceId ?? overrides[service.id] ?? matched?.service ?? null;
     const liveCost = matched ? Number(matched.rate) : service.costPerThousand;
     const withCost: Service = store.settings.autoSyncProviderCost
       ? applyServiceOverride(
