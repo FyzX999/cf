@@ -24,6 +24,10 @@ export const metadata: Metadata = {
   },
   description:
     "Buy social media marketing services across Instagram, TikTok, YouTube and more from one dashboard. Instant pricing, live tracking, wallet, reseller API.",
+  icons: {
+    icon: "/images/rocket-icon.png",
+    apple: "/images/rocket-icon.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
