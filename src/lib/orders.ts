@@ -77,10 +77,10 @@ function toPublic(row: {
   promo_code?: string | null;
 }): PublicOrder {
   // Order is considered paid if:
-  // 1. paid flag is explicitly true, OR
-  // 2. provider_order_id is set (means it was submitted to fulfillment), OR
+  // 1. paid flag is explicitly true (highest priority - wallet/gateway payments), OR
+  // 2. provider_order_id is set (means it was submitted to fulfillment), OR  
   // 3. status is beyond "pending" (processing, delivering, completed, etc.)
-  const paid = 
+  const isPaid = 
     row.paid === true || 
     Boolean(row.provider_order_id) || 
     (row.status !== "pending" && row.status !== "canceled" && row.status !== "refunded");
@@ -90,15 +90,15 @@ function toPublic(row: {
     serviceName: row.service_name,
     platform: row.platform,
     quantity: row.quantity,
-    delivered: paid ? row.delivered : 0,
-    status: paid ? row.status : "pending",
+    delivered: isPaid ? row.delivered : 0,
+    status: isPaid ? row.status : "pending",
     link: row.link,
     total: Number(row.total),
     startedAt: row.created_at,
     updatedAt: row.updated_at,
-    estimatedCompletion: row.status === "completed" ? "Completed" : paid ? "Updating..." : "Waiting for payment",
+    estimatedCompletion: row.status === "completed" ? "Completed" : isPaid ? (row.provider_order_id ? "Updating..." : "Manual fulfillment") : "Waiting for payment",
     delivery: row.delivery,
-    paid,
+    paid: isPaid,
     promoCode: row.promo_code ?? undefined,
   };
 }
@@ -314,8 +314,8 @@ export async function payOrder(input: {
   const next: StoredOrder = {
     ...existing,
     paid: true,
-    status: "processing",
-    estimatedCompletion: "Updating...",
+    status: providerOrderId ? "processing" : "pending",
+    estimatedCompletion: providerOrderId ? "Updating..." : "Manual fulfillment",
     updatedAt: now,
     providerOrderId,
   };
@@ -324,19 +324,19 @@ export async function payOrder(input: {
   const db = createServiceSupabase();
   if (db) {
     const patch = {
-      status: "processing" as const,
+      status: (providerOrderId ? "processing" : "pending") as const,
       provider_order_id: providerOrderId ?? null,
       updated_at: now,
       paid: true,
     };
     const { error } = await db.from("orders").update(patch).eq("public_id", publicId);
     if (error) {
-      // If paid column doesn't exist, still mark as processing with provider_order_id
-      // The toPublic function will infer paid=true from provider_order_id being set
+      // If paid column doesn't exist, still mark with provider_order_id
+      // The toPublic function will infer paid=true from status or provider_order_id
       const retry = await db
         .from("orders")
         .update({
-          status: "processing" as const,
+          status: (providerOrderId ? "processing" : "pending") as const,
           provider_order_id: providerOrderId ?? null,
           updated_at: now,
         })
