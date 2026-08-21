@@ -1,0 +1,197 @@
+{
+  "settings": {
+    "siteName": "cheapfollower.shop",
+    "tagline": "Social Growth. Without the Complicated Price Tag.",
+    "supportEmail": "support@cheapfollower.shop",
+    "announcement": "",
+    "guestCheckout": true,
+    "maintenanceMode": false,
+    "defaultMarkupMultiplier": 1.8,
+    "resellerDiscountPercent": 20,
+    "minOrderAmount": 0,
+    "currency": "USD",
+    "deliveryMultipliers": {
+      "standard": 1,
+      "fast": 1.35,
+      "drip": 1.15
+    },
+    "autoSyncProviderCost": false
+  },
+  "services": {},
+  "tickets": [],
+  "audit": [],
+  "promoCodes": [
+    {
+      "code": "WELCOME10",
+      "type": "percent",
+      "value": 10,
+      "active": true,
+      "maxUses": 1000,
+      "uses": 5,
+      "minOrder": 0
+    }
+  ],
+  "giftCards": [],
+  "wallets": {
+    "89da975d-ba15-4748-a86e-0f535b894a6e": {
+      "balance": 23.94,
+      "apiKey": "cf_e21bbcd0a1034f7eaa4b4e650303655f",
+      "transactions": [
+        {
+          "id": "TXN-97235028",
+          "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
+          "type": "order",
+          "method": "Wallet",
+          "amount": -0.52,
+          "note": "CF904107",
+          "createdAt": "2026-08-20T23:02:07.612Z"
+        },
+        {
+          "id": "TXN-47290677",
+          "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
+          "type": "order",
+          "method": "Wallet",
+          "amount": -0.38,
+          "note": "CF367588",
+          "createdAt": "2026-08-20T22:56:49.656Z"
+        },
+        {
+          "id": "TXN-91644654",
+          "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
+          "type": "order",
+          "method": "Wallet",
+          "amount": -0.08,
+          "note": "CF633157",
+          "createdAt": "2026-08-20T21:24:06.535Z"
+        },
+        {
+          "id": "TXN-12534566",
+          "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
+          "type": "order",
+          "method": "Wallet",
+          "amount": -0.08,
+          "note": "CF416314",
+          "createdAt": "2026-08-20T20:46:32.370Z"
+        },
+        {
+          "id": "TXN-99348525",
+          "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
+          "type": "deposit",
+          "method": "Test credit",
+          "amount": 25,
+          "note": "dev",
+          "createdAt": "2026-08-20T20:24:41.210Z"
+        }
+      ]
+    }
+  },
+  "payments": [
+    {
+      "id": "pay_ff1addd62e5847a8",
+      "provider": "nowpayments",
+      "kind": "wallet",
+      "status": "pending",
+      "amount": 10,
+      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
+      "gatewayId": "4598370086",
+      "invoiceUrl": "https://nowpayments.io/payment/?iid=4598370086",
+      "createdAt": "2026-08-20T22:53:48.262Z"
+    },
+    {
+      "id": "pay_df47c75d426f4095",
+      "provider": "nowpayments",
+      "kind": "order",
+      "status": "pending",
+      "amount": 0.85,
+      "publicId": "CF366234",
+      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
+      "gatewayId": "4407395585",
+      "invoiceUrl": "https://nowpayments.io/payment/?iid=4407395585",
+      "createdAt": "2026-08-20T22:50:21.851Z"
+    },
+    {
+      "id": "pay_322f5e51a64447d3",
+      "provider": "nowpayments",
+      "kind": "order",
+      "status": "pending",
+      "amount": 5.06,
+      "publicId": "CF821306",
+      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
+      "gatewayId": "5166041771",
+      "invoiceUrl": "https://nowpayments.io/payment/?iid=5166041771",
+      "createdAt": "2026-08-20T22:50:07.282Z"
+    },
+    {
+      "id": "pay_8b47bfe2a0e84199",
+      "provider": "nowpayments",
+      "kind": "order",
+      "status": "pending",
+      "amount": 0.09,
+      "publicId": "CF461206",
+      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
+      "gatewayId": "5653107353",
+      "invoiceUrl": "https://nowpayments.io/payment/?iid=5653107353",
+      "createdAt": "2026-08-20T22:49:49.443Z"
+    },
+    {
+      "id": "pay_c63d50585a824712",
+      "provider": "nowpayments",
+      "kind": "order",
+      "status": "pending",
+      "amount": 0.1,
+      "publicId": "CF745720",
+      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
+      "gatewayId": "5535865294",
+      "invoiceUrl": "https://nowpayments.io/payment/?iid=5535865294",
+      "createdAt": "2026-08-20T22:42:22.420Z"
+    },
+    {
+      "id": "pay_ae47c9bb57e04c6d",
+      "provider": "nowpayments",
+      "kind": "order",
+      "status": "pending",
+      "amount": 0.09,
+      "publicId": "CF591184",
+      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
+      "gatewayId": "4431269488",
+      "invoiceUrl": "https://nowpayments.io/payment/?iid=4431269488",
+      "createdAt": "2026-08-20T21:56:16.112Z"
+    },
+    {
+      "id": "pay_c4e3c47142d94404",
+      "provider": "nowpayments",
+      "kind": "order",
+      "status": "pending",
+      "amount": 0.85,
+      "publicId": "CF168292",
+      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
+      "gatewayId": "4981385746",
+      "invoiceUrl": "https://nowpayments.io/payment/?iid=4981385746",
+      "createdAt": "2026-08-20T21:25:47.376Z"
+    },
+    {
+      "id": "pay_711c10ef77e34daf",
+      "provider": "nowpayments",
+      "kind": "order",
+      "status": "pending",
+      "amount": 0.09,
+      "publicId": "CF319285",
+      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
+      "gatewayId": "5776642943",
+      "invoiceUrl": "https://nowpayments.io/payment/?iid=5776642943",
+      "createdAt": "2026-08-20T21:25:25.363Z"
+    },
+    {
+      "id": "pay_1d7d9ffb19c9496c",
+      "provider": "nowpayments",
+      "kind": "order",
+      "status": "pending",
+      "amount": 0.08,
+      "publicId": "CF633157",
+      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
+      "gatewayId": "4983987504",
+      "invoiceUrl": "https://nowpayments.io/payment/?iid=4983987504",
+      "createdAt": "2026-08-20T21:23:35.628Z"
+    }
+  ]
+}

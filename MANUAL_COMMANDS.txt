@@ -1,0 +1,184 @@
+================================================================================
+  MANUAL DEPLOYMENT COMMANDS - cheapfollower.shop
+================================================================================
+
+If the automated scripts don't work, follow these manual steps:
+
+================================================================================
+STEP 1: CHECK IF GIT IS INSTALLED
+================================================================================
+
+Open PowerShell and type:
+    git --version
+
+If you see a version number, Git is installed. Skip to Step 3.
+If not, download and install Git from: https://git-scm.com/download/win
+
+
+================================================================================
+STEP 2: OPEN POWERSHELL IN YOUR PROJECT FOLDER
+================================================================================
+
+Right-click in the project folder and select "Open PowerShell window here"
+Or open PowerShell and type:
+    cd "c:\Users\FyzX\cheapfollower.shop"
+
+
+================================================================================
+STEP 3: INITIALIZE GIT REPOSITORY
+================================================================================
+
+Copy and paste these commands one by one:
+
+# Initialize git
+git init
+
+# Add all files
+git add .
+
+# Create first commit
+git commit -m "Initial commit: cheapfollower.shop SMM panel"
+
+
+================================================================================
+STEP 4: CREATE GITHUB REPOSITORY
+================================================================================
+
+1. Go to: https://github.com/new
+2. Repository name: cheapfollower-shop
+3. Make it PRIVATE (recommended)
+4. Do NOT check "Initialize this repository with a README"
+5. Click "Create repository"
+
+
+================================================================================
+STEP 5: PUSH TO GITHUB
+================================================================================
+
+After creating the GitHub repo, copy YOUR repository URL from GitHub.
+It will look like: https://github.com/YOUR_USERNAME/cheapfollower-shop.git
+
+Then run these commands (replace YOUR_USERNAME with your actual username):
+
+git remote add origin https://github.com/YOUR_USERNAME/cheapfollower-shop.git
+git branch -M main
+git push -u origin main
+
+Enter your GitHub credentials when prompted.
+
+
+================================================================================
+STEP 6: DEPLOY TO VERCEL
+================================================================================
+
+1. Go to: https://vercel.com/new
+2. Click "Continue with GitHub"
+3. Find your "cheapfollower-shop" repository
+4. Click "Import"
+5. Vercel will auto-detect Next.js settings
+6. Click "Deploy"
+
+
+================================================================================
+STEP 7: ADD ENVIRONMENT VARIABLES IN VERCEL
+================================================================================
+
+After deployment, go to:
+Vercel Dashboard → Your Project → Settings → Environment Variables
+
+Add these (get values from your .env.local file):
+
+REQUIRED:
+    NEXT_PUBLIC_SITE_URL=https://cheapfollower.shop
+    NOWPAYMENTS_API_KEY=your_key_here
+    NOWPAYMENTS_IPN_SECRET=your_secret_here
+    NOWPAYMENTS_MODE=live
+    GODOFPANEL_API_KEY=your_key_here
+    GODOFPANEL_API_URL=https://godofpanel.com/api/v2
+    ADMIN_SECRET_KEY=random_32_character_string
+
+OPTIONAL (if using):
+    NEXT_PUBLIC_SUPABASE_URL=your_url
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
+    SUPABASE_SERVICE_ROLE_KEY=your_key
+
+After adding variables, click "Redeploy" button!
+
+
+================================================================================
+STEP 8: CONFIGURE YOUR DOMAIN
+================================================================================
+
+In Vercel Dashboard → Your Project → Settings → Domains:
+
+1. Click "Add"
+2. Type: cheapfollower.shop
+3. Vercel will show you DNS records
+
+Go to your domain registrar (where you bought cheapfollower.shop) and add:
+
+A Record:
+    Type: A
+    Name: @ (or leave blank)
+    Value: 76.76.21.21
+
+CNAME Record (for www):
+    Type: CNAME
+    Name: www
+    Value: cname.vercel-dns.com
+
+Wait 5-30 minutes (sometimes up to 48 hours) for DNS to update.
+
+
+================================================================================
+STEP 9: TEST YOUR SITE
+================================================================================
+
+Visit: https://cheapfollower.shop
+
+Test:
+✓ Homepage loads
+✓ Can create account
+✓ Can place order
+✓ Payments work
+✓ Admin panel works (yourdomain.com/admin/login)
+
+
+================================================================================
+DONE! YOUR SITE IS LIVE!
+================================================================================
+
+Future updates:
+1. Make changes to your code
+2. Run: git add .
+3. Run: git commit -m "Description of changes"
+4. Run: git push
+5. Vercel will automatically deploy the update!
+
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Problem: "Git is not recognized"
+Solution: Install Git from https://git-scm.com/download/win and restart PowerShell
+
+Problem: "Permission denied (publickey)"
+Solution: Use GitHub personal access token instead of password, or set up SSH keys
+
+Problem: Site not loading after DNS setup
+Solution: Wait longer (DNS can take 24-48 hours), verify DNS records are correct
+
+Problem: Build fails in Vercel
+Solution: Check build logs in Vercel dashboard, verify all dependencies are installed
+
+Problem: Environment variables not working
+Solution: Make sure to click "Redeploy" after adding variables
+
+
+Need more help? Check these files:
+- QUICK_START.md - Simple guide
+- DEPLOYMENT.md - Detailed guide
+- POST_DEPLOYMENT_CHECKLIST.md - Testing guide
+
+================================================================================

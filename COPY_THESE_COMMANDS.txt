@@ -1,0 +1,43 @@
+===================================================================
+  COPY AND PASTE THESE COMMANDS INTO POWERSHELL
+===================================================================
+
+1. Open PowerShell (right-click in this folder → "Open PowerShell window here")
+
+2. Copy and paste these commands ONE AT A TIME:
+
+-------------------------------------------------------------------
+INITIALIZE GIT:
+-------------------------------------------------------------------
+
+git init
+
+git add .
+
+git commit -m "Initial commit: cheapfollower.shop"
+
+
+-------------------------------------------------------------------
+PUSH TO GITHUB (after creating repo at github.com/new):
+-------------------------------------------------------------------
+
+Replace YOUR_USERNAME with your GitHub username:
+
+git remote add origin https://github.com/YOUR_USERNAME/cheapfollower-shop.git
+
+git branch -M main
+
+git push -u origin main
+
+
+-------------------------------------------------------------------
+LINKS YOU NEED:
+-------------------------------------------------------------------
+
+Create GitHub repo: https://github.com/new
+Deploy to Vercel: https://vercel.com/new
+
+
+===================================================================
+DONE! After pushing to GitHub, import the repo in Vercel!
+===================================================================
