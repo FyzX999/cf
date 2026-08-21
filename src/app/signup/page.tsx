@@ -28,12 +28,35 @@ export default function SignupPage() {
           try {
             const supabase = createBrowserSupabase();
             if (!supabase) throw new Error("Supabase is not configured");
+            
+            // Check for duplicate username (display_name)
+            const { data: existingUsers, error: checkError } = await supabase
+              .from('profiles')
+              .select('id')
+              .or(`display_name.eq.${name},email.eq.${email}`)
+              .limit(1);
+            
+            if (checkError && checkError.code !== 'PGRST116') {
+              // PGRST116 = table doesn't exist, ignore that error
+              console.warn('Profile check error:', checkError);
+            }
+            
+            if (existingUsers && existingUsers.length > 0) {
+              throw new Error("Username or email already exists");
+            }
+            
             const { data, error: authError } = await supabase.auth.signUp({
               email,
               password,
               options: { data: { display_name: name } },
             });
-            if (authError) throw authError;
+            if (authError) {
+              // Handle Supabase auth duplicate email error
+              if (authError.message.includes('already registered') || authError.message.includes('User already registered')) {
+                throw new Error("Email already exists");
+              }
+              throw authError;
+            }
             if (!data.session) {
               setMessage("Check your email to confirm the account, then log in.");
               return;
