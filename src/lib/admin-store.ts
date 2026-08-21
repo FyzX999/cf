@@ -10,6 +10,7 @@ import type {
   StoredTicket,
   StoredWallet,
 } from "./types";
+import { createServiceSupabase } from "./supabase";
 
 export type AdminStore = {
   settings: SiteSettings;
@@ -23,6 +24,7 @@ export type AdminStore = {
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "admin-store.json");
+const isVercel = process.env.VERCEL === "1" || process.env.VERCEL_ENV !== undefined;
 
 export const defaultSettings = (): SiteSettings => {
   const percent = Number(process.env.MARKUP_PERCENT ?? 80);
@@ -87,6 +89,34 @@ function mergeStore(raw: Partial<AdminStore> | null | undefined): AdminStore {
 
 export async function readStore(): Promise<AdminStore> {
   if (cache && Date.now() - cache.at < 1500) return cache.data;
+  
+  // On Vercel, use Supabase to store admin data
+  if (isVercel) {
+    try {
+      const supabase = createServiceSupabase();
+      if (supabase) {
+        const { data } = await supabase
+          .from('admin_store')
+          .select('data')
+          .eq('id', 'main')
+          .single();
+        
+        if (data?.data) {
+          const storeData = mergeStore(data.data as Partial<AdminStore>);
+          cache = { at: Date.now(), data: storeData };
+          return storeData;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to read from Supabase, using defaults:', error);
+    }
+    // Return defaults if Supabase not configured or query fails
+    const data = emptyStore();
+    cache = { at: Date.now(), data };
+    return data;
+  }
+  
+  // Local development: use file system
   try {
     const text = await readFile(STORE_PATH, "utf8");
     const data = mergeStore(JSON.parse(text) as Partial<AdminStore>);
@@ -100,6 +130,27 @@ export async function readStore(): Promise<AdminStore> {
 }
 
 async function persist(next: AdminStore) {
+  // On Vercel, save to Supabase
+  if (isVercel) {
+    try {
+      const supabase = createServiceSupabase();
+      if (supabase) {
+        await supabase
+          .from('admin_store')
+          .upsert({ 
+            id: 'main', 
+            data: next,
+            updated_at: new Date().toISOString()
+          });
+      }
+    } catch (error) {
+      console.error('Failed to persist to Supabase:', error);
+    }
+    cache = { at: Date.now(), data: next };
+    return;
+  }
+  
+  // Local development: use file system
   await mkdir(path.dirname(STORE_PATH), { recursive: true });
   await writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
   cache = { at: Date.now(), data: next };
