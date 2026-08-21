@@ -8,7 +8,7 @@ import {
   cancelProviderOrders,
   createProviderRefill,
   getProviderOrderStatus,
-  isGodofPanelConfigured,
+  isProviderConfigured,
   mapProviderStatus,
 } from "./provider";
 import { resolveProviderServiceId } from "./provider-map";

@@ -1,6 +1,6 @@
 import { AdminShell } from "@/components/AdminShell";
 import { money } from "@/lib/format";
-import { getProviderBalance, isGodofPanelConfigured } from "@/lib/provider";
+import { getProviderBalance, isProviderConfigured } from "@/lib/provider";
 import { listOrders } from "@/lib/orders";
 import { readStore } from "@/lib/admin-store";
 import { getLiveCatalog } from "@/lib/live-catalog";
