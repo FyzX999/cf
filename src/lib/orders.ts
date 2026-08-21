@@ -10,7 +10,7 @@ import {
   getProviderOrderStatus,
   isGodofPanelConfigured,
   mapProviderStatus,
-} from "./godofpanel";
+} from "./provider";
 import { resolveProviderServiceId } from "./provider-map";
 import { createServiceSupabase } from "./supabase";
 import type { DeliverySpeed, OrderStatus, PublicOrder } from "./types";
@@ -236,13 +236,13 @@ export async function createOrder(input: {
 }
 
 async function attachProvider(serviceId: string, link: string, quantity: number, delivery: DeliverySpeed) {
-  if (!isGodofPanelConfigured()) return undefined;
+  if (!isProviderConfigured()) return undefined;
   const service = await getLiveServiceById(serviceId);
   if (!service) throw new Error("Service not found");
   const providerServiceId = await resolveProviderServiceId(service);
   if (!providerServiceId) {
     throw new Error(
-      `No GodofPanel service mapped for ${service.name}. Set GODOFPANEL_SERVICE_MAP or map it in admin.`,
+      `No provider service mapped for ${service.name}. Set PROVIDER_SERVICE_MAP or map it in admin.`,
     );
   }
   const added = await addProviderOrder({
@@ -378,7 +378,7 @@ export async function getOrder(publicId: string) {
     if (data) {
       const mapped = toPublic(data);
       if (!mapped.paid) return mapped;
-      if (data.provider_order_id && isGodofPanelConfigured()) {
+      if (data.provider_order_id && isProviderConfigured()) {
         try {
           const remote = await getProviderOrderStatus(data.provider_order_id);
           const next = applyRemote(mapped, remote);
@@ -402,7 +402,7 @@ export async function getOrder(publicId: string) {
   const local = memory.get(publicId);
   if (local) {
     if (!local.paid) return local;
-    if (local.providerOrderId && isGodofPanelConfigured()) {
+    if (local.providerOrderId && isProviderConfigured()) {
       try {
         const remote = await getProviderOrderStatus(local.providerOrderId);
         const next = { ...applyRemote(local, remote), providerOrderId: local.providerOrderId, paid: true };

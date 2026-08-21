@@ -1,4 +1,4 @@
-import { getProviderBalance, isGodofPanelConfigured } from "@/lib/godofpanel";
+import { getProviderBalance, isGodofPanelConfigured } from "@/lib/provider";
 import { NextResponse } from "next/server";
 
 export async function GET() {

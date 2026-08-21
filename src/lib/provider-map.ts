@@ -1,4 +1,4 @@
-import { listProviderServicesCached, type GopService } from "./godofpanel";
+import { listProviderServicesCached, type GopService } from "./provider";
 import { applyServiceOverride, getLiveCatalog, retailFromCost } from "./live-catalog";
 import { readStore } from "./admin-store";
 import type { PlatformSlug, Service } from "./types";

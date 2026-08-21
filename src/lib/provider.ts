@@ -1,6 +1,6 @@
 /**
- * GodofPanel uses PerfectPanel API v2.
- * POST https://godofpanel.com/api/v2  (application/x-www-form-urlencoded)
+ * Provider API client using PerfectPanel API v2 format.
+ * POST to provider API endpoint (application/x-www-form-urlencoded)
  */
 
 export type GopService = {
@@ -51,7 +51,7 @@ function config() {
   return { key, url, configured: Boolean(key) };
 }
 
-export function isGodofPanelConfigured() {
+export function isProviderConfigured() {
   return config().configured;
 }
 
@@ -68,7 +68,7 @@ function isTopLevelError(json: unknown): json is GopError {
 async function gopRequest<T>(body: Record<string, string | number>): Promise<T> {
   const { key, url, configured } = config();
   if (!configured) {
-    throw new Error("GODOFPANEL_API_KEY is not set");
+    throw new Error("Provider API key is not configured");
   }
 
   const payload = new URLSearchParams();
@@ -91,13 +91,13 @@ async function gopRequest<T>(body: Record<string, string | number>): Promise<T> 
   } catch {
     throw new Error(
       res.ok
-        ? "GodofPanel returned a non-JSON response"
-        : `GodofPanel HTTP ${res.status}`,
+        ? "Provider returned a non-JSON response"
+        : `Provider API HTTP ${res.status}`,
     );
   }
 
   if (!res.ok) {
-    const message = isTopLevelError(json) ? json.error : `GodofPanel HTTP ${res.status}`;
+    const message = isTopLevelError(json) ? json.error : `Provider API HTTP ${res.status}`;
     throw new Error(message);
   }
 

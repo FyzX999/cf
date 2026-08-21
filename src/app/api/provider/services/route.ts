@@ -1,4 +1,4 @@
-import { isGodofPanelConfigured, listProviderServicesCached } from "@/lib/godofpanel";
+import { isGodofPanelConfigured, listProviderServicesCached } from "@/lib/provider";
 import { mappedCatalogServices } from "@/lib/provider-map";
 import { NextResponse } from "next/server";
 

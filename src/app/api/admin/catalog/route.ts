@@ -1,6 +1,6 @@
 import { appendAudit, readStore, updateServiceOverrides } from "@/lib/admin-store";
 import { getLiveCatalog, profitPerThousand } from "@/lib/live-catalog";
-import { isGodofPanelConfigured, listProviderServicesCached } from "@/lib/godofpanel";
+import { isGodofPanelConfigured, listProviderServicesCached } from "@/lib/provider";
 import { matchProviderService } from "@/lib/provider-map";
 import { requireAdminApi } from "@/lib/require-admin";
 import type { ServiceOverride } from "@/lib/types";

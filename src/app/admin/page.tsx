@@ -1,6 +1,6 @@
 import { AdminShell } from "@/components/AdminShell";
 import { money } from "@/lib/format";
-import { getProviderBalance, isGodofPanelConfigured } from "@/lib/godofpanel";
+import { getProviderBalance, isGodofPanelConfigured } from "@/lib/provider";
 import { listOrders } from "@/lib/orders";
 import { readStore } from "@/lib/admin-store";
 import { getLiveCatalog } from "@/lib/live-catalog";
@@ -25,7 +25,7 @@ export default async function AdminPage() {
   }, 0);
 
   let providerLabel = "Not configured";
-  if (isGodofPanelConfigured()) {
+  if (isProviderConfigured()) {
     try {
       const balance = await getProviderBalance();
       providerLabel = `${balance.balance} ${balance.currency}`;
