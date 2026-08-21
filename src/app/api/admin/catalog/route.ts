@@ -1,6 +1,6 @@
 import { appendAudit, readStore, updateServiceOverrides } from "@/lib/admin-store";
 import { getLiveCatalog, profitPerThousand } from "@/lib/live-catalog";
-import { isGodofPanelConfigured, listProviderServicesCached } from "@/lib/provider";
+import { isProviderConfigured, listProviderServicesCached } from "@/lib/provider";
 import { matchProviderService } from "@/lib/provider-map";
 import { requireAdminApi } from "@/lib/require-admin";
 import type { ServiceOverride } from "@/lib/types";
@@ -16,10 +16,10 @@ export async function GET() {
   let provider: Awaited<ReturnType<typeof listProviderServicesCached>> = [];
   let configured = false;
   try {
-    configured = isGodofPanelConfigured();
+    configured = isProviderConfigured();
     if (configured) provider = await listProviderServicesCached();
   } catch {
-    configured = isGodofPanelConfigured();
+    configured = isProviderConfigured();
   }
 
   const catalog = await getLiveCatalog();

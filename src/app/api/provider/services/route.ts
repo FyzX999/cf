@@ -1,9 +1,9 @@
-import { isGodofPanelConfigured, listProviderServicesCached } from "@/lib/provider";
+import { isProviderConfigured, listProviderServicesCached } from "@/lib/provider";
 import { mappedCatalogServices } from "@/lib/provider-map";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  if (!isGodofPanelConfigured()) {
+  if (!isProviderConfigured()) {
     return NextResponse.json({ configured: false, services: [], mapped: [] });
   }
   try {

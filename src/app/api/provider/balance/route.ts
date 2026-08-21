@@ -1,8 +1,8 @@
-import { getProviderBalance, isGodofPanelConfigured } from "@/lib/provider";
+import { getProviderBalance, isProviderConfigured } from "@/lib/provider";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  if (!isGodofPanelConfigured()) {
+  if (!isProviderConfigured()) {
     return NextResponse.json({ configured: false });
   }
   try {
