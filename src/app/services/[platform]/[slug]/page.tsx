@@ -35,7 +35,7 @@ export async function generateMetadata({
       "instant delivery",
       service.refill ? "refill guarantee" : "",
     ],
-    ogType: "product",
+    ogType: "website",
     canonicalUrl: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://cheapfollower.shop'}/services/${platform}/${slug}`,
   });
 }
