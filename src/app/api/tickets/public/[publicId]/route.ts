@@ -13,10 +13,11 @@ import { getTicketByPublicId, listTicketMessages } from "@/lib/tickets";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { publicId: string } }
+  { params }: { params: Promise<{ publicId: string }> }
 ) {
   try {
-    const publicId = params.publicId?.toUpperCase();
+    const { publicId: rawPublicId } = await params;
+    const publicId = rawPublicId?.toUpperCase();
 
     if (!publicId) {
       return NextResponse.json(

@@ -22,10 +22,10 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(
   req: Request,
-  { params }: { params: { orderId: string } }
+  { params }: { params: Promise<{ orderId: string }> }
 ) {
   try {
-    const orderId = params.orderId;
+    const { orderId } = await params;
     
     if (!orderId) {
       return NextResponse.json(

@@ -181,8 +181,11 @@ export default function SupportPage() {
                     // Rate limit specific message with countdown (Requirements 8.2, 8.4)
                     <>
                       <p className="text-sm text-[#f07167]">⏱️ {rateLimit.message}</p>
-                      <p className="text-sm text-[#f07167] mt-1">
-                        {formatCountdownMessage(rateLimit.countdown)}
+                      {rateLimit.countdown && (
+                        <p className="text-sm text-[#f07167] mt-1">
+                          {formatCountdownMessage(rateLimit.countdown)}
+                        </p>
+                      )}
                       </p>
                     </>
                   ) : (
