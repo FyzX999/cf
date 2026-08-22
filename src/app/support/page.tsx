@@ -181,7 +181,7 @@ export default function SupportPage() {
                     // Rate limit specific message with countdown (Requirements 8.2, 8.4)
                     <>
                       <p className="text-sm text-[#f07167]">⏱️ {rateLimit.message}</p>
-                      {rateLimit.countdown && (
+                      {rateLimit.countdown !== undefined && rateLimit.countdown > 0 && (
                         <p className="text-sm text-[#f07167] mt-1">
                           {formatCountdownMessage(rateLimit.countdown)}
                         </p>
@@ -192,7 +192,7 @@ export default function SupportPage() {
                     <p className="text-sm text-[#f07167]">
                       {typeof error === "object" && error !== null && "error" in error
                         ? String((error as { error: string }).error)
-                        : "Could not open ticket"}
+                        : String(error || "Could not open ticket")}
                     </p>
                   )}
                 </div>

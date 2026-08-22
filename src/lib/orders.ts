@@ -323,9 +323,8 @@ export async function payOrder(input: {
 
   const db = createServiceSupabase();
   if (db) {
-    const newStatus = providerOrderId ? "processing" : "pending";
     const patch = {
-      status: newStatus as const,
+      status: (providerOrderId ? "processing" : "pending") as "processing" | "pending",
       provider_order_id: providerOrderId ?? null,
       updated_at: now,
       paid: true,
@@ -334,11 +333,10 @@ export async function payOrder(input: {
     if (error) {
       // If paid column doesn't exist, still mark with provider_order_id
       // The toPublic function will infer paid=true from status or provider_order_id
-      const retryStatus = providerOrderId ? "processing" : "pending";
       const retry = await db
         .from("orders")
         .update({
-          status: retryStatus as const,
+          status: (providerOrderId ? "processing" : "pending") as "processing" | "pending",
           provider_order_id: providerOrderId ?? null,
           updated_at: now,
         })
