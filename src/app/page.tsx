@@ -1,6 +1,7 @@
 import { FeatureGrid } from "@/components/FeatureGrid";
 import { OrderWidget } from "@/components/OrderWidget";
 import { Reveal } from "@/components/Reveal";
+import { PlatformIcon } from "@/components/PlatformIcons";
 import { platforms } from "@/lib/catalog";
 import { readStore } from "@/lib/admin-store";
 import { getAuthUser } from "@/lib/supabase-server";
@@ -58,7 +59,9 @@ export default async function HomePage() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {platforms.map((p) => (
             <Link key={p.slug} href={`/services/${p.slug}`} className="glass lift p-5 hover:border-white/20">
-              <span className="mb-4 block h-2 w-10 rounded-full" style={{ background: p.accent }} />
+              <div className="mb-4">
+                <PlatformIcon platform={p.slug} size={32} />
+              </div>
               <h3 className="font-semibold">{p.name}</h3>
               <p className="muted mt-1 text-sm">{p.tagline}</p>
             </Link>

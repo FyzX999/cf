@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { platforms } from "@/lib/catalog";
 import { getLiveServicesByPlatform } from "@/lib/live-catalog";
+import { PlatformIcon } from "@/components/PlatformIcons";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,10 @@ export default async function PlatformsPage() {
         {grouped.map(({ p, list }) => (
           <section key={p.slug} className="glass p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">{p.name}</h2>
+              <div className="flex items-center gap-3">
+                <PlatformIcon platform={p.slug} size={28} />
+                <h2 className="text-xl font-semibold">{p.name}</h2>
+              </div>
               <Link href={`/services/${p.slug}`} className="text-sm text-[#6ea8ff]">
                 Browse {p.name}
               </Link>
