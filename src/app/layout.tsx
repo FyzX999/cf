@@ -5,6 +5,7 @@ import { MobileNav } from "@/components/MobileNav";
 import { Navbar } from "@/components/Navbar";
 import { AuthProvider } from "@/components/AuthProvider";
 import { ToastProvider } from "@/components/ToastProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { generateMetadata as generateSEO, generateStructuredData, StructuredData } from "@/components/SEO";
 import "./globals.css";
 
@@ -50,14 +51,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <StructuredData data={websiteData} />
       </head>
       <body className="flex min-h-full flex-col font-sans antialiased" suppressHydrationWarning>
-        <AuthProvider>
-          <ToastProvider>
-            <Navbar />
-            <main className="flex-1 pb-16 lg:pb-0">{children}</main>
-            <Footer />
-            <MobileNav />
-          </ToastProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <Navbar />
+              <main className="flex-1 pb-16 lg:pb-0">{children}</main>
+              <Footer />
+              <MobileNav />
+            </ToastProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
