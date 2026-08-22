@@ -186,7 +186,6 @@ export default function SupportPage() {
                           {formatCountdownMessage(rateLimit.countdown)}
                         </p>
                       )}
-                      </p>
                     </>
                   ) : (
                     // Regular error message
