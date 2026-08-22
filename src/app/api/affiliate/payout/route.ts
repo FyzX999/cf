@@ -13,7 +13,9 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth(request);
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+    const user = authResult.user;
     
     // Check if user is an affiliate
     const affiliate = await getAffiliate(user.id);
@@ -66,7 +68,9 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth(request);
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+    const user = authResult.user;
     
     const store = await readStore();
     const payouts = store.affiliatePayouts.filter((p) => p.affiliateUserId === user.id);

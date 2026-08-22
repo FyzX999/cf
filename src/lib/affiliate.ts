@@ -49,8 +49,10 @@ export async function createAffiliate(userId: string): Promise<Affiliate> {
     createdAt: new Date().toISOString(),
   };
 
-  store.affiliates[userId] = affiliate;
-  await writeStore(store);
+  await writeStore((s) => ({
+    ...s,
+    affiliates: { ...s.affiliates, [userId]: affiliate },
+  }));
 
   return affiliate;
 }
@@ -103,13 +105,18 @@ export async function trackReferral(
     createdAt: new Date().toISOString(),
   };
 
-  store.affiliateReferrals.push(referral);
-  
-  // Update affiliate stats
-  affiliate.totalReferrals += 1;
-  affiliate.activeReferrals += 1;
-
-  await writeStore(store);
+  await writeStore((s) => ({
+    ...s,
+    affiliateReferrals: [...s.affiliateReferrals, referral],
+    affiliates: {
+      ...s.affiliates,
+      [affiliate.userId]: {
+        ...affiliate,
+        totalReferrals: affiliate.totalReferrals + 1,
+        activeReferrals: affiliate.activeReferrals + 1,
+      },
+    },
+  }));
 
   return referral;
 }
@@ -151,22 +158,28 @@ export async function calculateCommission(
     createdAt: new Date().toISOString(),
   };
 
-  store.affiliateCommissions.push(commission);
-
-  // Update affiliate earnings
-  affiliate.pendingEarnings += commissionAmount;
-  affiliate.totalEarnings += commissionAmount;
-
-  // Update referral stats
-  referral.totalSpent += orderAmount;
-  referral.commissionEarned += commissionAmount;
-  
-  // Mark first order
-  if (!referral.firstOrderAt) {
-    referral.firstOrderAt = new Date().toISOString();
-  }
-
-  await writeStore(store);
+  await writeStore((s) => ({
+    ...s,
+    affiliateCommissions: [...s.affiliateCommissions, commission],
+    affiliates: {
+      ...s.affiliates,
+      [affiliate.userId]: {
+        ...affiliate,
+        pendingEarnings: affiliate.pendingEarnings + commissionAmount,
+        totalEarnings: affiliate.totalEarnings + commissionAmount,
+      },
+    },
+    affiliateReferrals: s.affiliateReferrals.map((r) =>
+      r.referredUserId === referredUserId
+        ? {
+            ...r,
+            totalSpent: r.totalSpent + orderAmount,
+            commissionEarned: r.commissionEarned + commissionAmount,
+            firstOrderAt: r.firstOrderAt || new Date().toISOString(),
+          }
+        : r
+    ),
+  }));
 
   return commission;
 }
@@ -182,9 +195,13 @@ export async function approveCommission(commissionId: string): Promise<boolean> 
     return false;
   }
 
-  commission.status = "approved";
+  await writeStore((s) => ({
+    ...s,
+    affiliateCommissions: s.affiliateCommissions.map((c) =>
+      c.id === commissionId ? { ...c, status: "approved" as const } : c
+    ),
+  }));
   
-  await writeStore(store);
   return true;
 }
 
@@ -286,12 +303,17 @@ export async function requestPayout(
     requestedAt: new Date().toISOString(),
   };
 
-  store.affiliatePayouts.push(payout);
-  
-  // Update affiliate pending earnings
-  affiliate.pendingEarnings -= amount;
-
-  await writeStore(store);
+  await writeStore((s) => ({
+    ...s,
+    affiliatePayouts: [...s.affiliatePayouts, payout],
+    affiliates: {
+      ...s.affiliates,
+      [userId]: {
+        ...affiliate,
+        pendingEarnings: affiliate.pendingEarnings - amount,
+      },
+    },
+  }));
 
   return payout;
 }
@@ -347,7 +369,54 @@ export async function processPayout(payoutId: string, success: boolean, notes?: 
   }
   payout.processedAt = new Date().toISOString();
 
-  await writeStore(store);
+  await writeStore((s) => {
+    const affiliate = s.affiliates[payout.affiliateUserId];
+    if (!affiliate) return s;
+    
+    if (success) {
+      // Calculate which commissions to mark as paid
+      let remaining = payout.amount;
+      const updatedCommissions = s.affiliateCommissions.map((c) => {
+        if (remaining <= 0) return c;
+        if (c.affiliateUserId === payout.affiliateUserId && c.status === "approved" && c.commissionAmount <= remaining) {
+          remaining -= c.commissionAmount;
+          return { ...c, status: "paid" as const, paidAt: new Date().toISOString() };
+        }
+        return c;
+      });
+      
+      return {
+        ...s,
+        affiliatePayouts: s.affiliatePayouts.map((p) =>
+          p.id === payoutId ? { ...payout, status: "completed" as const, completedAt: new Date().toISOString(), processedAt: payout.processedAt } : p
+        ),
+        affiliateCommissions: updatedCommissions,
+        affiliates: {
+          ...s.affiliates,
+          [payout.affiliateUserId]: {
+            ...affiliate,
+            paidEarnings: affiliate.paidEarnings + payout.amount,
+            lastPayoutAt: new Date().toISOString(),
+          },
+        },
+      };
+    } else {
+      return {
+        ...s,
+        affiliatePayouts: s.affiliatePayouts.map((p) =>
+          p.id === payoutId ? { ...payout, status: "failed" as const, processedAt: payout.processedAt } : p
+        ),
+        affiliates: {
+          ...s.affiliates,
+          [payout.affiliateUserId]: {
+            ...affiliate,
+            pendingEarnings: affiliate.pendingEarnings + payout.amount,
+          },
+        },
+      };
+    }
+  });
+  
   return true;
 }
 
@@ -378,9 +447,17 @@ export async function updateAffiliateTier(userId: string): Promise<AffiliateComm
   }
 
   if (newTier !== affiliate.tier) {
-    affiliate.tier = newTier;
-    affiliate.commissionRate = newRate;
-    await writeStore(store);
+    await writeStore((s) => ({
+      ...s,
+      affiliates: {
+        ...s.affiliates,
+        [userId]: {
+          ...affiliate,
+          tier: newTier,
+          commissionRate: newRate,
+        },
+      },
+    }));
   }
 
   return newTier;

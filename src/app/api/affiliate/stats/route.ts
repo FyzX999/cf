@@ -12,7 +12,9 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth(request);
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+    const user = authResult.user;
     
     // Check if user is an affiliate
     const affiliate = await getAffiliate(user.id);

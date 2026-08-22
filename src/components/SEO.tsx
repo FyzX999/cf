@@ -5,7 +5,7 @@ export interface SEOProps {
   description?: string;
   keywords?: string[];
   ogImage?: string;
-  ogType?: "website" | "article" | "product";
+  ogType?: "website" | "article";
   canonicalUrl?: string;
   noindex?: boolean;
   structuredData?: object;
