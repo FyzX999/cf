@@ -179,14 +179,14 @@ export default function SupportPage() {
                 <div className="flex-1">
                   {rateLimit.isRateLimited ? (
                     // Rate limit specific message with countdown (Requirements 8.2, 8.4)
-                    <>
+                    <div>
                       <p className="text-sm text-[#f07167]">⏱️ {rateLimit.message}</p>
                       {rateLimit.countdown !== undefined && rateLimit.countdown > 0 && (
                         <p className="text-sm text-[#f07167] mt-1">
                           {formatCountdownMessage(rateLimit.countdown)}
                         </p>
                       )}
-                    </>
+                    </div>
                   ) : (
                     // Regular error message
                     <p className="text-sm text-[#f07167]">
