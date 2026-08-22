@@ -10,6 +10,7 @@ import {
   Lifebuoy,
   ListChecks,
   PlusCircle,
+  UsersThree,
 } from "@phosphor-icons/react";
 import { Logo } from "./Logo";
 import { clsx } from "@/lib/format";
@@ -20,6 +21,7 @@ const items = [
   { href: "/dashboard/new-order", label: "New Order", icon: PlusCircle },
   { href: "/dashboard/orders", label: "Orders", icon: ListChecks, auth: true },
   { href: "/dashboard/wallet", label: "Wallet", icon: CreditCard },
+  { href: "/dashboard/affiliate", label: "Affiliate", icon: UsersThree },
   { href: "/dashboard/api", label: "API", icon: Key },
   { href: "/dashboard/support", label: "Support", icon: Lifebuoy },
   { href: "/dashboard/settings", label: "Settings", icon: Gear },
