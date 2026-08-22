@@ -173,7 +173,7 @@ export default function SupportPage() {
           
           <input className="field" name="orderId" placeholder="Order number (optional)" />
           <textarea className="field min-h-32" name="body" placeholder="Describe the issue" required />
-          {error && (
+          {error !== null && (
             <div className="rounded-lg bg-[#f07167]/10 border border-[#f07167]/20 p-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
