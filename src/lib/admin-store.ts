@@ -82,8 +82,8 @@ function emptyStore(): AdminStore {
     affiliateSettings: {
       enabled: true,
       defaultCommissionRate: 5,
-      minPayoutAmount: 50,
-      payoutMethods: ["wallet", "paypal"],
+      minPayoutAmount: 10,
+      payoutMethods: ["wallet"],
       cookieDuration: 30,
       commissionTiers: {
         bronze: { minReferrals: 0, rate: 5 },

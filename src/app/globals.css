@@ -1,18 +1,34 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #07080c;
+  /* Theme colors - can be overridden by theme system */
+  --color-primary: #6ea8ff;
+  --color-primary-light: #8bbaff;
+  --color-primary-dark: #5090e8;
+  --color-secondary: #8b7dff;
+  --color-accent: #6ea8ff;
+  --color-background: #0a0e17;
+  --color-surface: rgba(255, 255, 255, 0.03);
+  --color-text: #ffffff;
+  --color-text-muted: #9aa3b5;
+  --color-success: #3ddc97;
+  --color-warning: #f5b942;
+  --color-error: #f07167;
+  --gradient-primary: linear-gradient(135deg, #6ea8ff 0%, #8b7dff 100%);
+  
+  /* Legacy variable mappings */
+  --bg: var(--color-background);
   --bg-elev: #101218;
   --card: rgba(16, 18, 24, 0.72);
-  --fg: #f4f6fb;
-  --muted: #9aa3b5;
+  --fg: var(--color-text);
+  --muted: var(--color-text-muted);
   --border: rgba(255, 255, 255, 0.08);
-  --accent: #6ea8ff;
-  --accent-2: #8b7dff;
-  --success: #3ddc97;
-  --warn: #f5b942;
-  --danger: #f07167;
-  --ring: #6ea8ff;
+  --accent: var(--color-primary);
+  --accent-2: var(--color-secondary);
+  --success: var(--color-success);
+  --warn: var(--color-warning);
+  --danger: var(--color-error);
+  --ring: var(--color-primary);
   --radius: 14px;
 }
 
@@ -38,8 +54,8 @@ html, body {
 body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   background:
-    radial-gradient(1200px 600px at 12% -10%, rgba(110, 168, 255, 0.16), transparent 55%),
-    radial-gradient(900px 500px at 90% 0%, rgba(139, 125, 255, 0.12), transparent 50%),
+    radial-gradient(1200px 600px at 12% -10%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, color-mix(in srgb, var(--color-secondary) 12%, transparent), transparent 50%),
     var(--bg);
 }
 
@@ -108,14 +124,14 @@ a.glass:hover,
 }
 
 .btn-primary {
-  background: linear-gradient(180deg, #89baff 0%, #6ea8ff 100%);
+  background: linear-gradient(180deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
   color: #081018;
   border: 0;
 }
 
 .btn-primary:hover { 
   filter: brightness(1.08);
-  box-shadow: 0 4px 12px rgba(110, 168, 255, 0.3);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .btn-ghost {

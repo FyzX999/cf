@@ -13,8 +13,6 @@ export default function AffiliatePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAffiliate, setIsAffiliate] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState("");
-  const [payoutMethod, setPayoutMethod] = useState<"wallet" | "paypal" | "crypto">("wallet");
-  const [payoutDetails, setPayoutDetails] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -87,22 +85,26 @@ export default function AffiliatePage() {
         return;
       }
 
+      if (amount < 10) {
+        setError("Minimum payout amount is $10.00");
+        return;
+      }
+
       const res = await fetch("/api/affiliate/payout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount,
-          method: payoutMethod,
-          paymentDetails: payoutDetails,
+          method: "wallet",
+          paymentDetails: undefined,
         }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        setMessage("Payout requested successfully!");
+        setMessage("Wallet credit requested successfully! Funds will be added to your wallet once approved.");
         setPayoutAmount("");
-        setPayoutDetails("");
         loadData();
       } else {
         setError(data.error || "Failed to request payout");
@@ -280,39 +282,25 @@ export default function AffiliatePage() {
 
       {/* Request Payout */}
       <div className="glass mt-6 p-6">
-        <h3 className="font-semibold">Request Payout</h3>
-        <p className="muted mt-1 text-sm">Minimum payout: $50.00</p>
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
+        <h3 className="font-semibold">Cash Out to Wallet Credit</h3>
+        <p className="muted mt-1 text-sm">Minimum payout: $10.00 • Receive as onsite wallet credit</p>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
           <input
             type="number"
             className="field"
             placeholder="Amount"
             value={payoutAmount}
             onChange={(e) => setPayoutAmount(e.target.value)}
-            min="50"
+            min="10"
             step="0.01"
           />
-          <select
-            className="field"
-            value={payoutMethod}
-            onChange={(e) => setPayoutMethod(e.target.value as any)}
-          >
-            <option value="wallet">Wallet Credit</option>
-            <option value="paypal">PayPal</option>
-            <option value="crypto">Cryptocurrency</option>
-          </select>
-          <input
-            type="text"
-            className="field"
-            placeholder={payoutMethod === "paypal" ? "PayPal Email" : payoutMethod === "crypto" ? "Wallet Address" : "N/A"}
-            value={payoutDetails}
-            onChange={(e) => setPayoutDetails(e.target.value)}
-            disabled={payoutMethod === "wallet"}
-          />
+          <button onClick={requestPayout} className="btn btn-primary">
+            Request Wallet Credit
+          </button>
         </div>
-        <button onClick={requestPayout} className="btn btn-primary mt-4">
-          Request Payout
-        </button>
+        <p className="muted mt-2 text-xs">
+          Funds will be added to your account wallet and can be used for orders
+        </p>
       </div>
 
       {/* Payout History */}
