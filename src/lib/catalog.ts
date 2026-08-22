@@ -93,7 +93,7 @@ const seeds: Record<PlatformSlug, Seed[]> = {
 };
 
 function slugify(platform: PlatformSlug, category: string) {
-  return `${platform}-${category.toLowerCase().replace(/\s+/g, "-")}`;
+  return `${platform}-${category.toLowerCase().replace(/\s+/g, "-").replace(/\[|\]/g, "")}`;
 }
 
 export const services: Service[] = platforms.flatMap((platform, pIndex) =>
