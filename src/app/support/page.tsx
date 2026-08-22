@@ -177,7 +177,7 @@ export default function SupportPage() {
             <div className="rounded-lg bg-[#f07167]/10 border border-[#f07167]/20 p-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
-                  {rateLimit.isRateLimited ? (
+                  {rateLimit.isRateLimited && (
                     // Rate limit specific message with countdown (Requirements 8.2, 8.4)
                     <div>
                       <p className="text-sm text-[#f07167]">⏱️ {rateLimit.message}</p>
@@ -187,7 +187,8 @@ export default function SupportPage() {
                         </p>
                       )}
                     </div>
-                  ) : (
+                  )}
+                  {!rateLimit.isRateLimited && (
                     // Regular error message
                     <p className="text-sm text-[#f07167]">
                       {typeof error === "object" && error !== null && "error" in error
