@@ -272,3 +272,92 @@ export type OrderIdParseResult = {
   number: number;
   fullId: string;
 };
+
+// Affiliate System Types
+export type AffiliateStatus = "active" | "suspended" | "banned";
+
+export type AffiliateCommissionTier = "bronze" | "silver" | "gold" | "platinum";
+
+export type Affiliate = {
+  userId: string;
+  referralCode: string;
+  status: AffiliateStatus;
+  commissionRate: number; // Percentage (e.g., 10 = 10%)
+  tier: AffiliateCommissionTier;
+  totalEarnings: number;
+  pendingEarnings: number;
+  paidEarnings: number;
+  totalReferrals: number;
+  activeReferrals: number;
+  createdAt: string;
+  lastPayoutAt?: string;
+};
+
+export type AffiliateReferral = {
+  id: string;
+  affiliateUserId: string;
+  referredUserId: string;
+  referralCode: string;
+  status: "active" | "inactive";
+  totalSpent: number;
+  commissionEarned: number;
+  createdAt: string;
+  firstOrderAt?: string;
+};
+
+export type AffiliateCommission = {
+  id: string;
+  affiliateUserId: string;
+  referralUserId: string;
+  orderId: string;
+  orderAmount: number;
+  commissionRate: number;
+  commissionAmount: number;
+  status: "pending" | "approved" | "paid" | "rejected";
+  createdAt: string;
+  paidAt?: string;
+};
+
+export type AffiliatePayout = {
+  id: string;
+  affiliateUserId: string;
+  amount: number;
+  method: "wallet" | "paypal" | "crypto";
+  status: "requested" | "processing" | "completed" | "failed";
+  paymentDetails?: string;
+  requestedAt: string;
+  processedAt?: string;
+  completedAt?: string;
+  notes?: string;
+};
+
+export type AffiliateStats = {
+  totalClicks: number;
+  totalSignups: number;
+  conversionRate: number;
+  totalCommissions: number;
+  pendingCommissions: number;
+  lifetimeEarnings: number;
+  thisMonthEarnings: number;
+  lastMonthEarnings: number;
+  topReferrals: Array<{
+    userId: string;
+    email: string;
+    totalSpent: number;
+    commissionEarned: number;
+  }>;
+};
+
+export type AffiliateSettings = {
+  enabled: boolean;
+  defaultCommissionRate: number;
+  minPayoutAmount: number;
+  payoutMethods: Array<"wallet" | "paypal" | "crypto">;
+  cookieDuration: number; // days
+  commissionTiers: {
+    bronze: { minReferrals: number; rate: number };
+    silver: { minReferrals: number; rate: number };
+    gold: { minReferrals: number; rate: number };
+    platinum: { minReferrals: number; rate: number };
+  };
+};

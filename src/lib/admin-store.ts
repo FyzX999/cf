@@ -1,6 +1,11 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import type {
+  Affiliate,
+  AffiliateCommission,
+  AffiliatePayout,
+  AffiliateReferral,
+  AffiliateSettings,
   AuditEntry,
   GiftCard,
   PaymentRecord,
@@ -21,6 +26,11 @@ export type AdminStore = {
   giftCards: GiftCard[];
   wallets: Record<string, StoredWallet>;
   payments: PaymentRecord[];
+  affiliates: Record<string, Affiliate>;
+  affiliateReferrals: AffiliateReferral[];
+  affiliateCommissions: AffiliateCommission[];
+  affiliatePayouts: AffiliatePayout[];
+  affiliateSettings: AffiliateSettings;
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "admin-store.json");
@@ -65,6 +75,23 @@ function emptyStore(): AdminStore {
     giftCards: [],
     wallets: {},
     payments: [],
+    affiliates: {},
+    affiliateReferrals: [],
+    affiliateCommissions: [],
+    affiliatePayouts: [],
+    affiliateSettings: {
+      enabled: true,
+      defaultCommissionRate: 10,
+      minPayoutAmount: 50,
+      payoutMethods: ["wallet", "paypal"],
+      cookieDuration: 30,
+      commissionTiers: {
+        bronze: { minReferrals: 0, rate: 10 },
+        silver: { minReferrals: 10, rate: 12 },
+        gold: { minReferrals: 50, rate: 15 },
+        platinum: { minReferrals: 100, rate: 20 },
+      },
+    },
   };
 }
 
@@ -84,6 +111,11 @@ function mergeStore(raw: Partial<AdminStore> | null | undefined): AdminStore {
     giftCards: raw.giftCards ?? [],
     wallets: raw.wallets ?? {},
     payments: raw.payments ?? [],
+    affiliates: raw.affiliates ?? {},
+    affiliateReferrals: raw.affiliateReferrals ?? [],
+    affiliateCommissions: raw.affiliateCommissions ?? [],
+    affiliatePayouts: raw.affiliatePayouts ?? [],
+    affiliateSettings: { ...base.affiliateSettings, ...raw.affiliateSettings },
   };
 }
 
