@@ -5,6 +5,7 @@ import { MobileNav } from "@/components/MobileNav";
 import { Navbar } from "@/components/Navbar";
 import { AuthProvider } from "@/components/AuthProvider";
 import { ToastProvider } from "@/components/ToastProvider";
+import { generateMetadata as generateSEO, generateStructuredData, StructuredData } from "@/components/SEO";
 import "./globals.css";
 
 const sans = Plus_Jakarta_Sans({
@@ -18,22 +19,36 @@ const mono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "cheapfollower.shop — Social growth without the complicated price tag",
-    template: "%s · cheapfollower.shop",
-  },
-  description:
-    "Buy social media marketing services across Instagram, TikTok, YouTube and more from one dashboard. Instant pricing, live tracking, wallet, reseller API.",
-  icons: {
-    icon: "/images/rocket-icon.png",
-    apple: "/images/rocket-icon.png",
-  },
-};
+export const metadata: Metadata = generateSEO({
+  title: "Buy Cheap Instagram Followers, TikTok Views, YouTube Subscribers",
+  description: "Cheapest SMM panel for Instagram followers, TikTok views, YouTube subscribers, and more. Instant delivery, 30-day refill guarantee, wallet system, and reseller API.",
+  keywords: [
+    "cheap instagram followers",
+    "buy tiktok views",
+    "youtube subscribers",
+    "facebook likes",
+    "twitter followers",
+    "smm panel",
+    "social media marketing",
+    "cheapest smm services",
+  ],
+});
+
+const organizationData = generateStructuredData("Organization", {
+  name: "cheapfollower.shop",
+  alternateName: "Cheap Follower Shop",
+  description: "The most affordable SMM panel for social media growth services",
+});
+
+const websiteData = generateStructuredData("WebSite", {});
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable} h-full`} suppressHydrationWarning>
+      <head>
+        <StructuredData data={organizationData} />
+        <StructuredData data={websiteData} />
+      </head>
       <body className="flex min-h-full flex-col font-sans antialiased" suppressHydrationWarning>
         <AuthProvider>
           <ToastProvider>
