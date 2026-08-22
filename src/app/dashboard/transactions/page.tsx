@@ -4,9 +4,10 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { EmptyState } from "@/components/EmptyState";
 import { money } from "@/lib/format";
-import { parseOrderId } from "@/lib/commerce";
+import { parseOrderId } from "@/lib/order-parser";
 import type { WalletTxn } from "@/lib/types";
 import { useEffect, useState } from "react";
+import { useTransactionSearch } from "@/lib/useTransactionSearch";
 
 const TRANSACTION_TYPES = ["all", "deposit", "order", "giftcard", "promo", "refund"] as const;
 type TransactionTypeFilter = typeof TRANSACTION_TYPES[number];
@@ -21,12 +22,21 @@ type TransactionTypeFilter = typeof TRANSACTION_TYPES[number];
  * - 10.2: Disable filter controls while loading
  * - 10.3: Hide spinner and show transaction list when loading completes
  * - 10.4: Show error message with retry button on failure
+ * - 14.1: Include search input field above transaction list
+ * - 14.2: Filter transactions by subject and public ID
+ * - 14.3: Filter by order ID and note
+ * - 14.4: Case-insensitive and partial match support
+ * - 14.5: Show "No results found" when search returns empty
  */
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<WalletTxn[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<TransactionTypeFilter>("all");
+
+  // Use transaction search hook (Requirement 14.1, 14.2, 14.3, 14.4)
+  const { searchQuery, setSearchQuery, filteredTransactions: searchFiltered, isSearching } = 
+    useTransactionSearch(transactions);
 
   async function load() {
     try {
@@ -51,8 +61,8 @@ export default function TransactionsPage() {
   }, []);
 
   const filteredTransactions = typeFilter === "all" 
-    ? transactions 
-    : transactions.filter(t => t.type === typeFilter);
+    ? searchFiltered 
+    : searchFiltered.filter(t => t.type === typeFilter);
 
   const getTypeBadgeColor = (type: WalletTxn["type"]) => {
     switch (type) {
@@ -130,6 +140,49 @@ export default function TransactionsPage() {
         ))}
       </div>
 
+      {/* Search Input Field (Requirement 14.1) */}
+      <div className="mb-4">
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by order ID or note..."
+            disabled={isLoading}
+            className="w-full rounded-lg bg-white/5 border border-white/8 px-4 py-2 pl-10 text-sm text-white placeholder:text-[#9aa3b5] focus:border-[#6ea8ff] focus:outline-none focus:ring-1 focus:ring-[#6ea8ff] disabled:opacity-50 disabled:cursor-not-allowed"
+          />
+          <svg
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9aa3b5]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9aa3b5] hover:text-white transition-colors"
+              disabled={isLoading}
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Error State - Show error message with retry button (Requirement 10.4) */}
       {error && (
         <div className="glass mb-4 border-l-4 border-[#f07167] p-4">
@@ -157,11 +210,19 @@ export default function TransactionsPage() {
         filteredTransactions.length === 0 ? (
           <EmptyState
             type="transactions"
-            title={typeFilter === "all" ? "No Transactions Yet" : `No ${typeFilter.charAt(0).toUpperCase() + typeFilter.slice(1)} Transactions`}
+            title={
+              isSearching 
+                ? "No Results Found" 
+                : typeFilter === "all" 
+                  ? "No Transactions Yet" 
+                  : `No ${typeFilter.charAt(0).toUpperCase() + typeFilter.slice(1)} Transactions`
+            }
             description={
-              typeFilter === "all"
-                ? "Your transaction history will appear here once you make deposits or purchases."
-                : `No ${typeFilter} transactions found. Try selecting a different filter.`
+              isSearching
+                ? `No transactions match "${searchQuery}". Try a different search term or clear the filter.`
+                : typeFilter === "all"
+                  ? "Your transaction history will appear here once you make deposits or purchases."
+                  : `No ${typeFilter} transactions found. Try selecting a different filter.`
             }
           />
         ) : (

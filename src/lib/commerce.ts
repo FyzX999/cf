@@ -7,29 +7,8 @@ function normalizeCode(code: string) {
   return code.trim().toUpperCase().replace(/\s+/g, "");
 }
 
-/**
- * Parse order ID from transaction notes or text
- * Supports flexible formats: CF123456, TKT987654, ORD555555, etc.
- * Pattern: [A-Z]{2,4} followed by 6-8 digits
- * @param note - Text containing potential order ID
- * @returns Parsed result with prefix, number, and fullId, or null if no match
- */
-export function parseOrderId(note: string): OrderIdParseResult | null {
-  if (!note) return null;
-  
-  // Pattern: 2-4 uppercase letters followed by 6-8 digits
-  // Case-insensitive matching with word boundaries
-  const pattern = /\b([A-Z]{2,4})(\d{6,8})\b/i;
-  const match = note.match(pattern);
-  
-  if (!match) return null;
-  
-  return {
-    prefix: match[1].toUpperCase(),
-    number: parseInt(match[2], 10),
-    fullId: match[1].toUpperCase() + match[2],
-  };
-}
+// Re-export parseOrderId from order-parser to avoid fs/promises in client bundles
+export { parseOrderId } from "./order-parser";
 
 export function newPromoCode(input: Partial<PromoCode> & Pick<PromoCode, "code" | "type" | "value">): PromoCode {
   return {

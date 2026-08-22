@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { clsx } from "@/lib/format";
 import { sanitizeTicketSubject } from "@/lib/sanitize";
+import { useTicketSearch } from "@/lib/useTicketSearch";
 
 const CATEGORIES: { value: TicketCategory; label: string }[] = [
   { value: "order", label: "Order" },
@@ -30,13 +31,18 @@ const STATUSES: { value: TicketStatus; label: string; color: string }[] = [
 /**
  * TicketsPage Component
  * 
- * Displays list of support tickets with loading states and error handling.
+ * Displays list of support tickets with loading states, error handling, and search.
  * 
  * **Validates Requirements:**
  * - 10.1: Display loading spinner when tickets are being fetched
  * - 10.2: Disable filter controls while loading
  * - 10.3: Hide spinner and show ticket list when loading completes
  * - 10.4: Show error message with retry button on failure
+ * - 14.1: Include search input field above ticket list
+ * - 14.2: Filter tickets by subject and public ID
+ * - 14.3: Search is case-insensitive and supports partial matches
+ * - 14.4: Show "No results found" message when search returns empty
+ * - 14.5: Preserve other filters when searching
  */
 export default function TicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -68,12 +74,16 @@ export default function TicketsPage() {
     }
   }
 
-  // Filter tickets based on selected filters
-  const filteredTickets = tickets.filter((ticket) => {
+  // Apply category and status filters first (Requirement 14.5 - Preserve other filters)
+  const categoryAndStatusFiltered = tickets.filter((ticket) => {
     const matchesCategory = categoryFilter === "all" || ticket.category === categoryFilter;
     const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
     return matchesCategory && matchesStatus;
   });
+
+  // Apply search filter on top of other filters (Requirements 14.1-14.5)
+  const { query, setSearchQuery, filteredTickets, hasNoResults, isDebouncing } = 
+    useTicketSearch(categoryAndStatusFiltered);
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -102,6 +112,38 @@ export default function TicketsPage() {
         <Link href="/tickets/new" className="btn btn-primary">
           Create Ticket
         </Link>
+      </div>
+
+      {/* Search Input - Above filters (Requirement 14.1) */}
+      <div className="mb-4">
+        <div className="relative">
+          <input
+            type="text"
+            className="field w-full pl-10"
+            placeholder="Search by ticket ID or subject..."
+            value={query}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            disabled={isLoading}
+          />
+          <svg
+            className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#9aa3b5]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          {isDebouncing && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#9aa3b5] border-t-transparent" />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Filters - Disabled while loading (Requirement 10.2) */}
@@ -173,6 +215,13 @@ export default function TicketsPage() {
               description="Create your first support ticket to get started. Our team is here to help with any questions or issues you may have."
               actionLabel="Create Ticket"
               onAction={() => window.location.href = '/tickets/new'}
+            />
+          ) : hasNoResults ? (
+            // Show "No results found" when search returns empty (Requirement 14.4)
+            <EmptyState
+              type="tickets"
+              title="No Results Found"
+              description={`No tickets match "${query}". Try adjusting your search or filters to see more results.`}
             />
           ) : filteredTickets.length === 0 ? (
             <EmptyState
