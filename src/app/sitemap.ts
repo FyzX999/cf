@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { catalog } from "@/lib/catalog";
+import { platforms, services } from "@/lib/catalog";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://cheapfollower.shop";
@@ -23,18 +23,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   // Service pages
-  const servicePages = catalog.platforms.flatMap((platform) =>
-    platform.categories.flatMap((category) => ({
-      url: `${baseUrl}/services/${platform.id}/${category.slug}`,
-      lastModified: new Date(),
-      changeFrequency: "daily" as const,
-      priority: 0.9,
-    }))
-  );
+  const servicePages = services.map((service) => ({
+    url: `${baseUrl}/services/${service.platform}/${service.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "daily" as const,
+    priority: 0.9,
+  }));
 
   // Platform pages
-  const platformPages = catalog.platforms.map((platform) => ({
-    url: `${baseUrl}/services/${platform.id}`,
+  const platformPages = platforms.map((platform) => ({
+    url: `${baseUrl}/services/${platform.slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.7,
