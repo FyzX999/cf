@@ -139,25 +139,25 @@ export default function AffiliatePage() {
         <div className="glass max-w-2xl p-8">
           <h2 className="text-2xl font-semibold">Join Our Affiliate Program</h2>
           <p className="mt-4 text-[#c5cddc]">
-            Earn commissions by referring new customers to cheapfollower.shop. Get up to 20% commission on all
+            Earn commissions by referring new customers to cheapfollower.shop. Get up to 10% commission on all
             orders placed by your referrals.
           </p>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-lg bg-white/5 p-4">
-              <h3 className="font-semibold">10% Commission</h3>
+              <h3 className="font-semibold">5% Commission</h3>
               <p className="muted mt-1 text-sm">Bronze tier (0+ referrals)</p>
             </div>
             <div className="rounded-lg bg-white/5 p-4">
-              <h3 className="font-semibold">12% Commission</h3>
+              <h3 className="font-semibold">7% Commission</h3>
               <p className="muted mt-1 text-sm">Silver tier (10+ referrals)</p>
             </div>
             <div className="rounded-lg bg-white/5 p-4">
-              <h3 className="font-semibold">15% Commission</h3>
+              <h3 className="font-semibold">8% Commission</h3>
               <p className="muted mt-1 text-sm">Gold tier (50+ referrals)</p>
             </div>
             <div className="rounded-lg bg-white/5 p-4">
-              <h3 className="font-semibold">20% Commission</h3>
+              <h3 className="font-semibold">10% Commission</h3>
               <p className="muted mt-1 text-sm">Platinum tier (100+ referrals)</p>
             </div>
           </div>
