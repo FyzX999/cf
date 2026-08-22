@@ -61,6 +61,8 @@ create table if not exists public.orders (
   link text not null,
   total numeric(12,2) not null,
   delivery text not null default 'standard',
+  paid boolean not null default false,
+  promo_code text,
   provider_order_id bigint,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -89,10 +91,13 @@ create table if not exists public.tickets (
   id uuid primary key default gen_random_uuid(),
   public_id text not null unique,
   user_id uuid references public.profiles(id),
+  guest_email text,
   category text not null,
   subject text not null,
   status text not null default 'open',
-  created_at timestamptz not null default now()
+  order_id text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 create table if not exists public.ticket_messages (
@@ -133,6 +138,71 @@ create policy "own transactions" on public.transactions
 
 create policy "own tickets" on public.tickets
   for select using (auth.uid() = user_id);
+
+create policy "admins see all tickets" on public.tickets
+  for all using (
+    exists (
+      select 1 from public.profiles
+      where id = auth.uid() and role = 'admin'
+    )
+  );
+
+create policy "users create own tickets" on public.tickets
+  for insert with check (auth.uid() = user_id or user_id is null);
+
+create policy "users update own tickets" on public.tickets
+  for update using (auth.uid() = user_id);
+
+create policy "ticket messages visible with ticket" on public.ticket_messages
+  for select using (
+    exists (
+      select 1 from public.tickets
+      where id = ticket_id
+      and (auth.uid() = user_id or exists (
+        select 1 from public.profiles
+        where id = auth.uid() and role = 'admin'
+      ))
+    )
+  );
+
+create policy "users can reply to own tickets" on public.ticket_messages
+  for insert with check (
+    exists (
+      select 1 from public.tickets
+      where id = ticket_id
+      and auth.uid() = user_id
+    )
+  );
+
+create policy "admins can reply to any ticket" on public.ticket_messages
+  for insert with check (
+    exists (
+      select 1 from public.profiles
+      where id = auth.uid() and role = 'admin'
+    )
+  );
+
+-- Performance indexes
+
+-- Orders table indexes
+create index if not exists idx_orders_status on public.orders(status);
+create index if not exists idx_orders_user_id on public.orders(user_id);
+create index if not exists idx_orders_public_id on public.orders(public_id);
+
+-- Tickets table indexes
+create index if not exists idx_tickets_user_id on public.tickets(user_id);
+create index if not exists idx_tickets_status on public.tickets(status);
+create index if not exists idx_tickets_public_id on public.tickets(public_id);
+create index if not exists idx_tickets_order_id on public.tickets(order_id);
+
+-- Ticket messages table indexes
+create index if not exists idx_ticket_messages_ticket_id on public.ticket_messages(ticket_id);
+create index if not exists idx_ticket_messages_created_at on public.ticket_messages(created_at);
+
+-- Transactions table indexes
+create index if not exists idx_transactions_user_id on public.transactions(user_id);
+create index if not exists idx_transactions_type on public.transactions(type);
+create index if not exists idx_transactions_created_at on public.transactions(created_at);
 
 -- Tighten guest order reads after launch: replace the open select with a
 -- tracking RPC that accepts public_id only.

@@ -2,7 +2,8 @@
 
 import { StatusBadge } from "@/components/StatusBadge";
 import { compact, money } from "@/lib/format";
-import type { PublicOrder } from "@/lib/types";
+import type { PublicOrder, Ticket } from "@/lib/types";
+import { useRateLimitFeedback, formatCountdownMessage } from "@/lib/useRateLimitFeedback";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -13,6 +14,7 @@ export default function TrackDetailPage() {
   const [missing, setMissing] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
 
   // Payment state
   const [giftCardCode, setGiftCardCode] = useState("");
@@ -23,6 +25,18 @@ export default function TrackDetailPage() {
 
   // Wallet confirmation step
   const [confirmWallet, setConfirmWallet] = useState(false);
+
+  // Refund state
+  const [refundBusy, setRefundBusy] = useState(false);
+  const [refundSuccess, setRefundSuccess] = useState<{
+    amount: number;
+    newBalance: number;
+  } | null>(null);
+  const [refundError, setRefundError] = useState<unknown | null>(null);
+  const [refundResponse, setRefundResponse] = useState<Response | undefined>(undefined);
+
+  // Rate limit feedback for refund (Requirements 8.1, 8.2, 8.3, 8.4, 8.5)
+  const refundRateLimit = useRateLimitFeedback(refundError, refundResponse);
 
   async function load() {
     const id = String(params.id || "").toUpperCase();
@@ -49,6 +63,20 @@ export default function TrackDetailPage() {
     }
   }
 
+  async function loadTickets() {
+    if (!order) return;
+    try {
+      const res = await fetch(`/api/tickets/by-order/${order.publicId}`, { cache: "no-store" });
+      if (res.ok) {
+        const json = await res.json();
+        setTickets(json.tickets || []);
+      }
+    } catch (error) {
+      console.error("Failed to load tickets:", error);
+      setTickets([]);
+    }
+  }
+
   useEffect(() => {
     let alive = true;
     async function tick() {
@@ -71,6 +99,14 @@ export default function TrackDetailPage() {
     if (paid) setNote("Payment received. Delivery starts automatically once the network confirms.");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Load tickets when order is available
+  useEffect(() => {
+    if (order) {
+      loadTickets().catch(() => undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order?.publicId]);
 
   async function payCrypto() {
     if (!order) return;
@@ -140,6 +176,41 @@ export default function TrackDetailPage() {
     }
   }
 
+  async function requestRefund() {
+    if (!order) return;
+    setRefundBusy(true);
+    setError(null);
+    setNote(null);
+    setRefundSuccess(null);
+    setRefundError(null);
+    setRefundResponse(undefined);
+    try {
+      const res = await fetch(`/api/orders/${order.publicId}/refund`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      
+      // Store response for rate limit parsing
+      setRefundResponse(res);
+      
+      const json = await res.json();
+      if (!res.ok) throw json; // Throw the full JSON object for rate limit parsing
+      
+      // Update order status to refunded
+      setOrder({ ...order, status: "refunded" });
+      setRefundSuccess({
+        amount: json.refundAmount,
+        newBalance: json.newWalletBalance,
+      });
+      setWalletBalance(json.newWalletBalance);
+    } catch (e) {
+      setRefundError(e);
+      setError(e instanceof Error ? e.message : "Refund request failed");
+    } finally {
+      setRefundBusy(false);
+    }
+  }
+
   if (missing) {
     return <div className="mx-auto max-w-lg px-4 py-16">Order not found.</div>;
   }
@@ -149,6 +220,13 @@ export default function TrackDetailPage() {
 
   const pct = order.paid ? Math.round((order.delivered / order.quantity) * 100) : 0;
   const walletCoversOrder = walletBalance !== null && walletBalance >= order.total;
+
+  // Check if order is eligible for refund
+  // Eligible if: paid AND not already refunded AND (canceled OR partial)
+  const isRefundEligible = 
+    order.paid && 
+    order.status !== "refunded" && 
+    (order.status === "canceled" || order.status === "partial");
 
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
@@ -279,6 +357,55 @@ export default function TrackDetailPage() {
 
       {order.paid && note && <p className="mt-6 text-sm text-[#3ddc97]">{note}</p>}
 
+      {/* Refund button for eligible orders */}
+      {isRefundEligible && (
+        <div className="glass mt-8 space-y-4 p-6">
+          <div>
+            <p className="text-sm font-semibold">Request Refund</p>
+            <p className="muted mt-1 text-sm">
+              {order.status === "canceled" 
+                ? "This order was canceled. You can request a full refund to your wallet."
+                : "This order was partially completed. You can request a proportional refund for the undelivered portion."}
+            </p>
+          </div>
+          
+          <button
+            type="button"
+            className="btn btn-primary w-full"
+            disabled={refundBusy}
+            onClick={requestRefund}
+          >
+            {refundBusy ? "Processing refund…" : "Request Refund"}
+          </button>
+
+          {refundSuccess && (
+            <div className="rounded-lg border border-[#3ddc97]/20 bg-[#3ddc97]/5 px-4 py-3">
+              <p className="text-sm font-semibold text-[#3ddc97]">Refund Successful!</p>
+              <p className="muted mt-1 text-sm">
+                Refund amount: {money(refundSuccess.amount)}
+              </p>
+              <p className="muted text-sm">
+                New wallet balance: {money(refundSuccess.newBalance)}
+              </p>
+            </div>
+          )}
+
+          {error && <p className="text-sm text-[#f07167]">{error}</p>}
+        </div>
+      )}
+
+      {/* Show refunded status for already refunded orders */}
+      {order.paid && order.status === "refunded" && (
+        <div className="glass mt-8 p-6">
+          <div className="rounded-lg border border-[#9aa3b5]/20 bg-[#9aa3b5]/5 px-4 py-3">
+            <p className="text-sm font-semibold text-[#9aa3b5]">Order Refunded</p>
+            <p className="muted mt-1 text-sm">
+              This order has been refunded. The amount has been credited to your wallet.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="glass mt-8 p-6">
         <div className="flex justify-between text-sm">
           <span>Progress</span>
@@ -318,6 +445,53 @@ export default function TrackDetailPage() {
             <dd>{money(order.total)}</dd>
           </div>
         </dl>
+      </div>
+
+      {/* Related Support Tickets */}
+      <div className="glass mt-8 p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Support Tickets</h2>
+          <Link
+            href={`/dashboard/tickets/new?orderId=${order.publicId}`}
+            className="btn btn-ghost btn-sm"
+          >
+            Create ticket
+          </Link>
+        </div>
+
+        {tickets.length === 0 ? (
+          <p className="muted mt-4 text-sm">
+            No support tickets for this order. Create one if you need assistance.
+          </p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {tickets.map((ticket) => (
+              <Link
+                key={ticket.id}
+                href={`/dashboard/tickets/${ticket.publicId}`}
+                className="block rounded-lg border border-white/8 bg-white/5 p-4 transition-colors hover:border-white/12 hover:bg-white/8"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs text-[#9aa3b5]">
+                        {ticket.publicId}
+                      </span>
+                      <StatusBadge status={ticket.status} />
+                    </div>
+                    <p className="mt-1 font-medium">{ticket.subject}</p>
+                    <p className="muted mt-1 text-xs">
+                      Created {new Date(ticket.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-[#3ddc97]/10 px-2 py-1 text-xs capitalize text-[#3ddc97]">
+                    {ticket.category}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

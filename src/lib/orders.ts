@@ -304,7 +304,7 @@ export async function payOrder(input: {
     } else {
       if (input.userId && remaining > 0) {
         const { creditWallet } = await import("./commerce");
-        await creditWallet(input.userId, remaining, "Refund", `Provider failed for ${publicId}`);
+        await creditWallet(input.userId, remaining, "Refund", `Provider failed for ${publicId}`, "refund");
       }
       throw error;
     }
@@ -499,6 +499,9 @@ export async function refillOrder(publicId: string) {
 }
 
 export async function cancelOrder(publicId: string) {
+  // Get the order to check if it's paid
+  const order = await getOrder(publicId);
+  
   const providerOrderId = await storedProviderId(publicId);
   if (!providerOrderId) {
     const db = createServiceSupabase();
@@ -511,6 +514,23 @@ export async function cancelOrder(publicId: string) {
     if (db) {
       await db.from("orders").update({ status: "canceled", updated_at: now }).eq("public_id", publicId);
     }
+    
+    // Process refund if order is paid
+    if (order?.paid) {
+      const userId = await storedUserId(publicId);
+      if (userId) {
+        const { processRefund } = await import("./refunds");
+        const refundResult = await processRefund({
+          orderId: publicId,
+          userId,
+          reason: "canceled",
+        });
+        
+        // Log refund result for audit trail (Requirements: 10.3)
+        console.log(`[REFUND AUDIT] Order ${publicId} canceled - User: ${userId}, Success: ${refundResult.success}, Amount: ${refundResult.refundAmount}, Error: ${refundResult.error ?? 'none'}`);
+      }
+    }
+    
     return { cancel: 1 };
   }
   const result = await cancelProviderOrders([providerOrderId]);
@@ -522,7 +542,154 @@ export async function cancelOrder(publicId: string) {
       updatedAt: new Date().toISOString(),
     });
   }
+  
+  // Process refund if order is paid
+  if (order?.paid) {
+    const userId = await storedUserId(publicId);
+    if (userId) {
+      const { processRefund } = await import("./refunds");
+      const refundResult = await processRefund({
+        orderId: publicId,
+        userId,
+        reason: "canceled",
+      });
+      
+      // Log refund result for audit trail (Requirements: 10.3)
+      console.log(`[REFUND AUDIT] Order ${publicId} canceled - User: ${userId}, Success: ${refundResult.success}, Amount: ${refundResult.refundAmount}, Error: ${refundResult.error ?? 'none'}`);
+    }
+  }
+  
   return result;
+}
+
+/**
+ * Mark an order as partial and process refund for undelivered quantity.
+ * 
+ * Requirements addressed:
+ * - 16.1: Handle partial order refunds when delivered < quantity
+ * - 16.2: Calculate proportional refund using formula
+ * - 16.3: Prevent duplicate refunds
+ * 
+ * @param publicId - Order public ID
+ * @param userId - User ID (for authorization and refund)
+ * @returns RefundResult with success status and refund details
+ */
+export async function markOrderPartial(publicId: string, userId?: string): Promise<import("./types").RefundResult> {
+  const order = await getOrder(publicId);
+  
+  // Validate order exists
+  if (!order) {
+    return {
+      success: false,
+      refundAmount: 0,
+      newWalletBalance: 0,
+      transactionId: "",
+      error: "Order not found",
+    };
+  }
+  
+  // Validate order is paid
+  if (!order.paid) {
+    return {
+      success: false,
+      refundAmount: 0,
+      newWalletBalance: 0,
+      transactionId: "",
+      error: "Cannot mark unpaid order as partial",
+    };
+  }
+  
+  // Validate order has not been fully refunded
+  if (order.status === "refunded") {
+    return {
+      success: false,
+      refundAmount: 0,
+      newWalletBalance: 0,
+      transactionId: "",
+      error: "Already refunded",
+    };
+  }
+  
+  // Validate there's actually a partial delivery (delivered < quantity)
+  if (order.delivered >= order.quantity) {
+    return {
+      success: false,
+      refundAmount: 0,
+      newWalletBalance: 0,
+      transactionId: "",
+      error: "Order is fully delivered, no refund due",
+    };
+  }
+  
+  if (order.delivered === 0) {
+    return {
+      success: false,
+      refundAmount: 0,
+      newWalletBalance: 0,
+      transactionId: "",
+      error: "Use cancelOrder for orders with zero delivery",
+    };
+  }
+  
+  // Get userId from order if not provided
+  const refundUserId = userId || (await storedUserId(publicId));
+  if (!refundUserId) {
+    return {
+      success: false,
+      refundAmount: 0,
+      newWalletBalance: 0,
+      transactionId: "",
+      error: "User ID required for refund",
+    };
+  }
+  
+  // Update order status to 'partial' before processing refund
+  const now = new Date().toISOString();
+  const db = createServiceSupabase();
+  
+  if (db) {
+    const { error } = await db
+      .from("orders")
+      .update({
+        status: "partial" as const,
+        updated_at: now,
+      })
+      .eq("public_id", publicId);
+    
+    if (error) {
+      console.error("Failed to update order status to partial:", error);
+    }
+  }
+  
+  // Update in-memory cache
+  const local = memory.get(publicId);
+  if (local) {
+    memory.set(publicId, {
+      ...local,
+      status: "partial",
+      updatedAt: now,
+    });
+  }
+  
+  // Process refund for undelivered quantity
+  const { processRefund } = await import("./refunds");
+  const refundResult = await processRefund({
+    orderId: publicId,
+    userId: refundUserId,
+    reason: "partial",
+    adminNote: "Automatic partial refund",
+  });
+  
+  return refundResult;
+}
+
+async function storedUserId(publicId: string): Promise<string | null> {
+  const local = memory.get(publicId) as (StoredOrder & { userId?: string }) | undefined;
+  if (local?.userId) return local.userId;
+  const db = createServiceSupabase();
+  if (!db) return null;
+  const { data } = await db.from("orders").select("user_id").eq("public_id", publicId).maybeSingle();
+  return data?.user_id ?? null;
 }
 
 export { getLiveServiceById as getService };

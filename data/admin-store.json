@@ -19,7 +19,218 @@
   },
   "services": {},
   "tickets": [],
-  "audit": [],
+  "audit": [
+    {
+      "id": "1787404800097-3706",
+      "time": "2026-08-22T13:20:00.097Z",
+      "actor": "user-uuid",
+      "action": "refund_completed",
+      "target": "CF555555 | User: user-uuid | Amount: $50.00 | New balance: $150.00 | TxnID: txn-789"
+    },
+    {
+      "id": "1787404800095-2751",
+      "time": "2026-08-22T13:20:00.095Z",
+      "actor": "user-uuid",
+      "action": "refund_wallet_credited",
+      "target": "CF555555 | User: user-uuid | Amount: $50.00 | TxnID: txn-789"
+    },
+    {
+      "id": "1787404800094-2728",
+      "time": "2026-08-22T13:20:00.094Z",
+      "actor": "user-uuid",
+      "action": "refund_started",
+      "target": "CF555555 | Amount: $50.00 | Reason: canceled"
+    },
+    {
+      "id": "1787404800091-6361",
+      "time": "2026-08-22T13:20:00.091Z",
+      "actor": "admin",
+      "action": "refund_completed",
+      "target": "CF789012 | User: user-uuid | Amount: $10.00 | New balance: $60.00 | TxnID: txn-456"
+    },
+    {
+      "id": "1787404800090-6761",
+      "time": "2026-08-22T13:20:00.090Z",
+      "actor": "admin",
+      "action": "refund_wallet_credited",
+      "target": "CF789012 | User: user-uuid | Amount: $10.00 | TxnID: txn-456"
+    },
+    {
+      "id": "1787404800088-6959",
+      "time": "2026-08-22T13:20:00.088Z",
+      "actor": "admin",
+      "action": "refund_started",
+      "target": "CF789012 | Amount: $10.00 | Reason: partial"
+    },
+    {
+      "id": "1787404800085-9852",
+      "time": "2026-08-22T13:20:00.085Z",
+      "actor": "user-uuid",
+      "action": "refund_completed",
+      "target": "CF123456 | User: user-uuid | Amount: $50.00 | New balance: $150.00 | TxnID: txn-123"
+    },
+    {
+      "id": "1787404800083-9483",
+      "time": "2026-08-22T13:20:00.083Z",
+      "actor": "user-uuid",
+      "action": "refund_wallet_credited",
+      "target": "CF123456 | User: user-uuid | Amount: $50.00 | TxnID: txn-123"
+    },
+    {
+      "id": "1787404800081-6292",
+      "time": "2026-08-22T13:20:00.081Z",
+      "actor": "user-uuid",
+      "action": "refund_started",
+      "target": "CF123456 | Amount: $50.00 | Reason: canceled"
+    },
+    {
+      "id": "1787404462403-1209",
+      "time": "2026-08-22T13:14:22.403Z",
+      "actor": "user-uuid",
+      "action": "refund_completed",
+      "target": "CF555555 | User: user-uuid | Amount: $50.00 | New balance: $150.00 | TxnID: txn-789"
+    },
+    {
+      "id": "1787404462400-4200",
+      "time": "2026-08-22T13:14:22.400Z",
+      "actor": "user-uuid",
+      "action": "refund_wallet_credited",
+      "target": "CF555555 | User: user-uuid | Amount: $50.00 | TxnID: txn-789"
+    },
+    {
+      "id": "1787404462398-5208",
+      "time": "2026-08-22T13:14:22.398Z",
+      "actor": "user-uuid",
+      "action": "refund_started",
+      "target": "CF555555 | Amount: $50.00 | Reason: canceled"
+    },
+    {
+      "id": "1787404462395-9383",
+      "time": "2026-08-22T13:14:22.395Z",
+      "actor": "admin",
+      "action": "refund_completed",
+      "target": "CF789012 | User: user-uuid | Amount: $10.00 | New balance: $60.00 | TxnID: txn-456"
+    },
+    {
+      "id": "1787404462393-4681",
+      "time": "2026-08-22T13:14:22.393Z",
+      "actor": "admin",
+      "action": "refund_wallet_credited",
+      "target": "CF789012 | User: user-uuid | Amount: $10.00 | TxnID: txn-456"
+    },
+    {
+      "id": "1787404462388-5332",
+      "time": "2026-08-22T13:14:22.388Z",
+      "actor": "admin",
+      "action": "refund_started",
+      "target": "CF789012 | Amount: $10.00 | Reason: partial"
+    },
+    {
+      "id": "1787404462382-853",
+      "time": "2026-08-22T13:14:22.382Z",
+      "actor": "user-uuid",
+      "action": "refund_completed",
+      "target": "CF123456 | User: user-uuid | Amount: $50.00 | New balance: $150.00 | TxnID: txn-123"
+    },
+    {
+      "id": "1787404462378-8163",
+      "time": "2026-08-22T13:14:22.378Z",
+      "actor": "user-uuid",
+      "action": "refund_wallet_credited",
+      "target": "CF123456 | User: user-uuid | Amount: $50.00 | TxnID: txn-123"
+    },
+    {
+      "id": "1787404462374-9735",
+      "time": "2026-08-22T13:14:22.374Z",
+      "actor": "user-uuid",
+      "action": "refund_started",
+      "target": "CF123456 | Amount: $50.00 | Reason: canceled"
+    },
+    {
+      "id": "1787404441352-2913",
+      "time": "2026-08-22T13:14:01.352Z",
+      "actor": "user-uuid",
+      "action": "refund_completed",
+      "target": "CF555555 | User: user-uuid | Amount: $50.00 | New balance: $150.00 | TxnID: txn-789"
+    },
+    {
+      "id": "1787404441350-5029",
+      "time": "2026-08-22T13:14:01.350Z",
+      "actor": "user-uuid",
+      "action": "refund_wallet_credited",
+      "target": "CF555555 | User: user-uuid | Amount: $50.00 | TxnID: txn-789"
+    },
+    {
+      "id": "1787404441349-991",
+      "time": "2026-08-22T13:14:01.349Z",
+      "actor": "user-uuid",
+      "action": "refund_started",
+      "target": "CF555555 | Amount: $50.00 | Reason: canceled"
+    },
+    {
+      "id": "1787404441347-6001",
+      "time": "2026-08-22T13:14:01.347Z",
+      "actor": "admin",
+      "action": "refund_completed",
+      "target": "CF789012 | User: user-uuid | Amount: $10.00 | New balance: $60.00 | TxnID: txn-456"
+    },
+    {
+      "id": "1787404441345-6066",
+      "time": "2026-08-22T13:14:01.345Z",
+      "actor": "admin",
+      "action": "refund_wallet_credited",
+      "target": "CF789012 | User: user-uuid | Amount: $10.00 | TxnID: txn-456"
+    },
+    {
+      "id": "1787404441344-662",
+      "time": "2026-08-22T13:14:01.344Z",
+      "actor": "admin",
+      "action": "refund_started",
+      "target": "CF789012 | Amount: $10.00 | Reason: partial"
+    },
+    {
+      "id": "1787404441344-3350",
+      "time": "2026-08-22T13:14:01.344Z",
+      "actor": "user-uuid",
+      "action": "refund_completed",
+      "target": "CF555555 | User: user-uuid | Amount: $50.00 | New balance: $150.00 | TxnID: txn-789"
+    },
+    {
+      "id": "1787404441343-3425",
+      "time": "2026-08-22T13:14:01.343Z",
+      "actor": "user-uuid",
+      "action": "refund_wallet_credited",
+      "target": "CF555555 | User: user-uuid | Amount: $50.00 | TxnID: txn-789"
+    },
+    {
+      "id": "1787404441342-8461",
+      "time": "2026-08-22T13:14:01.342Z",
+      "actor": "user-uuid",
+      "action": "refund_completed",
+      "target": "CF123456 | User: user-uuid | Amount: $50.00 | New balance: $150.00 | TxnID: txn-123"
+    },
+    {
+      "id": "1787404441342-6627",
+      "time": "2026-08-22T13:14:01.342Z",
+      "actor": "user-uuid",
+      "action": "refund_started",
+      "target": "CF555555 | Amount: $50.00 | Reason: canceled"
+    },
+    {
+      "id": "1787404441340-40",
+      "time": "2026-08-22T13:14:01.340Z",
+      "actor": "user-uuid",
+      "action": "refund_wallet_credited",
+      "target": "CF123456 | User: user-uuid | Amount: $50.00 | TxnID: txn-123"
+    },
+    {
+      "id": "1787404441340-8481",
+      "time": "2026-08-22T13:14:01.340Z",
+      "actor": "admin",
+      "action": "refund_completed",
+      "target": "CF789012 | User: user-uuid | Amount: $10.00 | New balance: $60.00 | TxnID: txn-456"
+    }
+  ],
   "promoCodes": [
     {
       "code": "WELCOME10",
@@ -27,171 +238,11 @@
       "value": 10,
       "active": true,
       "maxUses": 1000,
-      "uses": 5,
+      "uses": 0,
       "minOrder": 0
     }
   ],
   "giftCards": [],
-  "wallets": {
-    "89da975d-ba15-4748-a86e-0f535b894a6e": {
-      "balance": 23.94,
-      "apiKey": "cf_e21bbcd0a1034f7eaa4b4e650303655f",
-      "transactions": [
-        {
-          "id": "TXN-97235028",
-          "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
-          "type": "order",
-          "method": "Wallet",
-          "amount": -0.52,
-          "note": "CF904107",
-          "createdAt": "2026-08-20T23:02:07.612Z"
-        },
-        {
-          "id": "TXN-47290677",
-          "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
-          "type": "order",
-          "method": "Wallet",
-          "amount": -0.38,
-          "note": "CF367588",
-          "createdAt": "2026-08-20T22:56:49.656Z"
-        },
-        {
-          "id": "TXN-91644654",
-          "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
-          "type": "order",
-          "method": "Wallet",
-          "amount": -0.08,
-          "note": "CF633157",
-          "createdAt": "2026-08-20T21:24:06.535Z"
-        },
-        {
-          "id": "TXN-12534566",
-          "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
-          "type": "order",
-          "method": "Wallet",
-          "amount": -0.08,
-          "note": "CF416314",
-          "createdAt": "2026-08-20T20:46:32.370Z"
-        },
-        {
-          "id": "TXN-99348525",
-          "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
-          "type": "deposit",
-          "method": "Test credit",
-          "amount": 25,
-          "note": "dev",
-          "createdAt": "2026-08-20T20:24:41.210Z"
-        }
-      ]
-    }
-  },
-  "payments": [
-    {
-      "id": "pay_ff1addd62e5847a8",
-      "provider": "nowpayments",
-      "kind": "wallet",
-      "status": "pending",
-      "amount": 10,
-      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
-      "gatewayId": "4598370086",
-      "invoiceUrl": "https://nowpayments.io/payment/?iid=4598370086",
-      "createdAt": "2026-08-20T22:53:48.262Z"
-    },
-    {
-      "id": "pay_df47c75d426f4095",
-      "provider": "nowpayments",
-      "kind": "order",
-      "status": "pending",
-      "amount": 0.85,
-      "publicId": "CF366234",
-      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
-      "gatewayId": "4407395585",
-      "invoiceUrl": "https://nowpayments.io/payment/?iid=4407395585",
-      "createdAt": "2026-08-20T22:50:21.851Z"
-    },
-    {
-      "id": "pay_322f5e51a64447d3",
-      "provider": "nowpayments",
-      "kind": "order",
-      "status": "pending",
-      "amount": 5.06,
-      "publicId": "CF821306",
-      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
-      "gatewayId": "5166041771",
-      "invoiceUrl": "https://nowpayments.io/payment/?iid=5166041771",
-      "createdAt": "2026-08-20T22:50:07.282Z"
-    },
-    {
-      "id": "pay_8b47bfe2a0e84199",
-      "provider": "nowpayments",
-      "kind": "order",
-      "status": "pending",
-      "amount": 0.09,
-      "publicId": "CF461206",
-      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
-      "gatewayId": "5653107353",
-      "invoiceUrl": "https://nowpayments.io/payment/?iid=5653107353",
-      "createdAt": "2026-08-20T22:49:49.443Z"
-    },
-    {
-      "id": "pay_c63d50585a824712",
-      "provider": "nowpayments",
-      "kind": "order",
-      "status": "pending",
-      "amount": 0.1,
-      "publicId": "CF745720",
-      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
-      "gatewayId": "5535865294",
-      "invoiceUrl": "https://nowpayments.io/payment/?iid=5535865294",
-      "createdAt": "2026-08-20T22:42:22.420Z"
-    },
-    {
-      "id": "pay_ae47c9bb57e04c6d",
-      "provider": "nowpayments",
-      "kind": "order",
-      "status": "pending",
-      "amount": 0.09,
-      "publicId": "CF591184",
-      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
-      "gatewayId": "4431269488",
-      "invoiceUrl": "https://nowpayments.io/payment/?iid=4431269488",
-      "createdAt": "2026-08-20T21:56:16.112Z"
-    },
-    {
-      "id": "pay_c4e3c47142d94404",
-      "provider": "nowpayments",
-      "kind": "order",
-      "status": "pending",
-      "amount": 0.85,
-      "publicId": "CF168292",
-      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
-      "gatewayId": "4981385746",
-      "invoiceUrl": "https://nowpayments.io/payment/?iid=4981385746",
-      "createdAt": "2026-08-20T21:25:47.376Z"
-    },
-    {
-      "id": "pay_711c10ef77e34daf",
-      "provider": "nowpayments",
-      "kind": "order",
-      "status": "pending",
-      "amount": 0.09,
-      "publicId": "CF319285",
-      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
-      "gatewayId": "5776642943",
-      "invoiceUrl": "https://nowpayments.io/payment/?iid=5776642943",
-      "createdAt": "2026-08-20T21:25:25.363Z"
-    },
-    {
-      "id": "pay_1d7d9ffb19c9496c",
-      "provider": "nowpayments",
-      "kind": "order",
-      "status": "pending",
-      "amount": 0.08,
-      "publicId": "CF633157",
-      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
-      "gatewayId": "4983987504",
-      "invoiceUrl": "https://nowpayments.io/payment/?iid=4983987504",
-      "createdAt": "2026-08-20T21:23:35.628Z"
-    }
-  ]
+  "wallets": {},
+  "payments": []
 }

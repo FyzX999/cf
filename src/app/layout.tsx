@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { MobileNav } from "@/components/MobileNav";
 import { Navbar } from "@/components/Navbar";
 import { AuthProvider } from "@/components/AuthProvider";
+import { ToastProvider } from "@/components/ToastProvider";
 import "./globals.css";
 
 const sans = Plus_Jakarta_Sans({
@@ -35,10 +36,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${sans.variable} ${mono.variable} h-full`} suppressHydrationWarning>
       <body className="flex min-h-full flex-col font-sans antialiased" suppressHydrationWarning>
         <AuthProvider>
-          <Navbar />
-          <main className="flex-1 pb-16 lg:pb-0">{children}</main>
-          <Footer />
-          <MobileNav />
+          <ToastProvider>
+            <Navbar />
+            <main className="flex-1 pb-16 lg:pb-0">{children}</main>
+            <Footer />
+            <MobileNav />
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

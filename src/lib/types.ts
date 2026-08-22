@@ -103,6 +103,45 @@ export type SiteSettings = {
   autoSyncProviderCost: boolean;
 };
 
+export type TicketStatus = "open" | "in_progress" | "waiting_customer" | "resolved" | "closed";
+
+export type Ticket = {
+  id: string;
+  publicId: string;
+  userId: string | null;
+  category: TicketCategory;
+  subject: string;
+  status: TicketStatus;
+  orderId?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TicketMessage = {
+  id: string;
+  ticketId: string;
+  authorRole: "customer" | "agent" | "system";
+  body: string;
+  createdAt: string;
+  attachments?: string[];
+};
+
+export type CreateTicketInput = {
+  userId?: string;
+  guestEmail?: string;
+  category: TicketCategory;
+  subject: string;
+  body: string;
+  orderId?: string;
+};
+
+export type TicketReplyInput = {
+  ticketId: string;
+  body: string;
+  authorRole: "customer" | "agent";
+  newStatus?: TicketStatus;
+};
+
 export type StoredTicket = {
   id: string;
   category: string;
@@ -200,4 +239,36 @@ export type PublicOrder = {
   delivery: DeliverySpeed;
   paid: boolean;
   promoCode?: string;
+};
+
+// Refund System Types
+export type RefundCalculation = {
+  orderId: string;
+  originalTotal: number;
+  quantityOrdered: number;
+  quantityDelivered: number;
+  refundAmount: number;
+  refundReason: "canceled" | "partial";
+};
+
+export type RefundResult = {
+  success: boolean;
+  refundAmount: number;
+  newWalletBalance: number;
+  transactionId: string;
+  error?: string;
+};
+
+export type RefundRequest = {
+  orderId: string;
+  userId: string;
+  reason: "canceled" | "partial";
+  adminNote?: string;
+};
+
+// Transaction Parsing Types
+export type OrderIdParseResult = {
+  prefix: string;
+  number: number;
+  fullId: string;
 };
