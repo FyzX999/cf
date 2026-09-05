@@ -1,4 +1,4 @@
-import { FlashSaleBanner, LiveOrderCounter, ReviewsShowcase } from "@/components/marketing";
+﻿import { FlashSaleBanner, ReviewsShowcase } from "@/components/marketing";
 import { FeatureGrid } from "@/components/FeatureGrid";
 import { OrderWidget } from "@/components/OrderWidget";
 import { Reveal } from "@/components/Reveal";
@@ -31,8 +31,6 @@ export default async function HomePage() {
             Purchase social-media marketing services across multiple platforms from a single dashboard. Instant pricing, live tracking, wallet, and reseller API.
           </p>
           
-          <LiveOrderCounter className="mt-4" />
-          
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/services" className="btn btn-primary">
               Browse Services
@@ -64,7 +62,7 @@ export default async function HomePage() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {platforms.map((p) => (
-            <Link key={p.slug} href={`/services/${p.slug}`} className="glass lift p-5 hover:border-white/20">
+            <Link key={p.slug} href={/services/} className="glass lift p-5 hover:border-white/20">
               <span className="mb-4 block h-2 w-10 rounded-full" style={{ background: p.accent }} />
               <h3 className="font-semibold">{p.name}</h3>
               <p className="muted mt-1 text-sm">{p.tagline}</p>
