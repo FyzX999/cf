@@ -16,8 +16,32 @@ export async function GET() {
 export async function PUT(req: Request) {
   const denied = await requireAdminApi();
   if (denied) return denied;
-  const body = (await req.json()) as Partial<SiteSettings>;
-  const store = await updateSettings(body);
-  await appendAudit("update_settings", "site");
-  return NextResponse.json({ settings: store.settings });
+  
+  try {
+    const body = await req.json();
+    
+    // Ensure numeric fields are numbers
+    const sanitized: Partial<SiteSettings> = {
+      ...body,
+      defaultMarkupMultiplier: Number(body.defaultMarkupMultiplier),
+      resellerDiscountPercent: Number(body.resellerDiscountPercent),
+      minOrderAmount: Number(body.minOrderAmount),
+      baseOrderCount: body.baseOrderCount ? Number(body.baseOrderCount) : undefined,
+      deliveryMultipliers: {
+        standard: Number(body.deliveryMultipliers?.standard || 1),
+        fast: Number(body.deliveryMultipliers?.fast || 1.35),
+        drip: Number(body.deliveryMultipliers?.drip || 1.15)
+      }
+    };
+    
+    const store = await updateSettings(sanitized);
+    await appendAudit("update_settings", "site");
+    return NextResponse.json({ settings: store.settings });
+  } catch (error) {
+    console.error('Settings update error:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to update settings' },
+      { status: 400 }
+    );
+  }
 }
