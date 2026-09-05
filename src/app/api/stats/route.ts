@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createServiceSupabase } from '@/lib/supabase';
 import { calculateOrderStats } from '@/lib/order-counter';
 import { readStore } from '@/lib/admin-store';
@@ -15,15 +15,17 @@ export async function GET() {
     const store = await readStore();
     const baseCount = store.settings.baseOrderCount || 0;
     
+    console.log('[Stats API] baseOrderCount:', baseCount);
+    
     const db = createServiceSupabase();
     
     if (!db) {
       // Fallback to base count + mock data if Supabase not configured
       return NextResponse.json({
         totalOrders: baseCount + 12847,
-        ordersToday: 156,
-        ordersThisWeek: 892,
-        ordersThisMonth: 3421,
+        ordersToday: baseCount + 156,
+        ordersThisWeek: baseCount + 892,
+        ordersThisMonth: baseCount + 3421,
         lastUpdated: new Date().toISOString()
       });
     }
@@ -48,7 +50,14 @@ export async function GET() {
     }));
 
     const stats = calculateOrderStats(orders);
+    
+    // Add base count to all stats
     stats.totalOrders = (totalCount || 0) + baseCount;
+    stats.ordersToday += baseCount;
+    stats.ordersThisWeek += baseCount;
+    stats.ordersThisMonth += baseCount;
+    
+    console.log('[Stats API] Returning stats:', stats);
 
     return NextResponse.json(stats);
   } catch (error) {
@@ -59,9 +68,9 @@ export async function GET() {
     // Return base count + mock data on error
     return NextResponse.json({
       totalOrders: baseCount + 12500,
-      ordersToday: 150,
-      ordersThisWeek: 850,
-      ordersThisMonth: 3400,
+      ordersToday: baseCount + 150,
+      ordersThisWeek: baseCount + 850,
+      ordersThisMonth: baseCount + 3400,
       lastUpdated: new Date().toISOString()
     });
   }
