@@ -25,6 +25,8 @@ export default function AdminCommercePage() {
   const [giftAmount, setGiftAmount] = useState(25);
   const [giftCode, setGiftCode] = useState("");
   const [giftCount, setGiftCount] = useState(1);
+  const [debugData, setDebugData] = useState<any>(null);
+  const [debugBusy, setDebugBusy] = useState(false);
 
   async function load() {
     const res = await fetch("/api/admin/commerce", { cache: "no-store" });
@@ -125,10 +127,81 @@ export default function AdminCommercePage() {
     }
   }
 
+  async function debugCashApp() {
+    setDebugBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/cashapp-debug");
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Debug failed");
+      setDebugData(json);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Debug failed");
+    } finally {
+      setDebugBusy(false);
+    }
+  }
+
   return (
     <AdminShell title="Promos & gift cards">
       {error && <p className="mb-4 text-sm text-[#f07167]">{error}</p>}
       {note && <p className="mb-4 text-sm text-[#3ddc97]">{note}</p>}
+
+      {/* CashApp Debug Section */}
+      <div className="glass mb-6 p-5">
+        <div className="flex items-center justify-between">
+          <p className="font-semibold">CashApp Payment Debug</p>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            disabled={debugBusy}
+            onClick={debugCashApp}
+          >
+            {debugBusy ? "Checking..." : "Check Recent Emails"}
+          </button>
+        </div>
+        {debugData && (
+          <div className="mt-4 space-y-3">
+            <div className="text-sm">
+              <p className="muted mb-2">{debugData.message}</p>
+              <div className="rounded bg-black/30 p-3 font-mono text-xs">
+                <p>Email: {debugData.config?.email}</p>
+                <p>IMAP: {debugData.config?.imapHost}:{debugData.config?.imapPort}</p>
+                <p>CashApp Tag: {debugData.config?.cashappTag}</p>
+              </div>
+            </div>
+            {debugData.emails && debugData.emails.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-sm font-semibold">Recent Emails ({debugData.emails.length}):</p>
+                {debugData.emails.map((email: any, idx: number) => (
+                  <div key={idx} className="rounded border border-white/10 bg-black/20 p-3 text-xs">
+                    <div className="mb-2 flex justify-between">
+                      <span className="font-semibold">{email.subject}</span>
+                      <span className="muted">{new Date(email.date).toLocaleString()}</span>
+                    </div>
+                    <div className="space-y-1 font-mono">
+                      <p className="text-green-400">
+                        Amount: {email.parsed?.amount ? `$${email.parsed.amount}` : '❌ Not found'}
+                      </p>
+                      <p className="text-blue-400">
+                        Note: {email.parsed?.note || '❌ Not found'}
+                      </p>
+                    </div>
+                    {email.textPreview && (
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-gray-400">Show text preview</summary>
+                        <pre className="mt-2 whitespace-pre-wrap text-xs text-gray-500">
+                          {email.textPreview}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="glass space-y-3 p-5">
