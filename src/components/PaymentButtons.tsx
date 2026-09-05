@@ -171,17 +171,17 @@ export function PaymentButtons({
 
           <div className="space-y-2">
             <label className="text-xs text-gray-400">
-              Paste your CashApp receipt URL for instant verification
+              Paste your CashApp receipt URL or transaction number
             </label>
             <input
               type="text"
               className="field w-full text-sm"
-              placeholder="https://cash.app/payments/abc123..."
+              placeholder="https://cash.app/payments/D-RKOXR3K76 or #D-RKOXR3K76"
               value={receiptUrl}
               onChange={(e) => setReceiptUrl(e.target.value)}
             />
             <p className="text-xs text-gray-500">
-              💡 After payment, tap the transaction → Share → Copy Link
+              💡 Tap transaction → Copy transaction number (starts with #D-)
             </p>
           </div>
 

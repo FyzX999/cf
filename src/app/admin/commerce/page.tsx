@@ -180,19 +180,32 @@ export default function AdminCommercePage() {
                       <span className="muted">{new Date(email.date).toLocaleString()}</span>
                     </div>
                     <div className="space-y-1 font-mono">
-                      <p className="text-green-400">
+                      <p className={email.parsed?.amount ? "text-green-400" : "text-red-400"}>
                         Amount: {email.parsed?.amount ? `$${email.parsed.amount}` : '❌ Not found'}
                       </p>
-                      <p className="text-blue-400">
+                      <p className={email.parsed?.note ? "text-blue-400" : "text-red-400"}>
                         Note: {email.parsed?.note || '❌ Not found'}
                       </p>
                     </div>
-                    {email.textPreview && (
+                    {(email.textPreview || email.htmlPreview) && (
                       <details className="mt-2">
-                        <summary className="cursor-pointer text-gray-400">Show text preview</summary>
-                        <pre className="mt-2 whitespace-pre-wrap text-xs text-gray-500">
-                          {email.textPreview}
-                        </pre>
+                        <summary className="cursor-pointer text-gray-400">Show raw content</summary>
+                        {email.textPreview && (
+                          <div className="mt-2">
+                            <p className="mb-1 text-gray-400">Plain Text (first 1500 chars):</p>
+                            <pre className="whitespace-pre-wrap text-xs text-gray-500 max-h-48 overflow-y-auto">
+                              {email.textPreview}
+                            </pre>
+                          </div>
+                        )}
+                        {email.htmlPreview && (
+                          <div className="mt-2">
+                            <p className="mb-1 text-gray-400">HTML (first 1500 chars):</p>
+                            <pre className="whitespace-pre-wrap text-xs text-gray-500 max-h-48 overflow-y-auto">
+                              {email.htmlPreview}
+                            </pre>
+                          </div>
+                        )}
                       </details>
                     )}
                   </div>

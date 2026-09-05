@@ -161,9 +161,14 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                         amount,
                         note
                       },
-                      // First 800 chars of text for debugging
-                      textPreview: plainText?.substring(0, 800),
-                      htmlPreview: html?.substring(0, 800)
+                      // More preview for debugging
+                      textPreview: plainText?.substring(0, 1500),
+                      htmlPreview: html?.substring(0, 1500),
+                      // Show what patterns we're searching for
+                      searchPatterns: {
+                        amountPatterns: ['\\+\\$', '\\$\\d+\\.\\d{2}', '\\d+\\.\\d{2}\\s*USD'],
+                        notePatterns: ['For\\s+([A-Z]{2}\\d{6})', 'For:\\s*([A-Z]{2}\\d{6})', 'Note:\\s*([A-Z]{2}\\d{6})']
+                      }
                     });
                   });
                 });
