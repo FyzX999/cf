@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
+import { createServiceSupabase } from "./supabase";
 import type {
   AuditEntry,
   GiftCard,
@@ -11,6 +12,7 @@ import type {
   StoredWallet,
 } from "./types";
 import type { FlashSale } from './flash-sales';
+import type { Subscription } from './subscriptions';
 
 export type AdminStore = {
   settings: SiteSettings;
@@ -22,26 +24,33 @@ export type AdminStore = {
   wallets: Record<string, StoredWallet>;
   payments: PaymentRecord[];
   flashSales?: FlashSale[];
+  subscriptions?: Subscription[];
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "admin-store.json");
+const IS_VERCEL = process.env.VERCEL === '1';
 
 export const defaultSettings = (): SiteSettings => {
   const percent = Number(process.env.MARKUP_PERCENT ?? 80);
   const multiplier = 1 + (Number.isFinite(percent) ? percent : 80) / 100;
   return {
-    siteName: "cheapfollower.shop",
-    tagline: "Social Growth. Without the Complicated Price Tag.",
-    supportEmail: "support@cheapfollower.shop",
-    announcement: "",
-    guestCheckout: true,
-    maintenanceMode: false,
+    siteName: process.env.SITE_NAME || "cheapfollower.shop",
+    tagline: process.env.SITE_TAGLINE || "Social Growth. Without the Complicated Price Tag.",
+    supportEmail: process.env.SUPPORT_EMAIL || "support@cheapfollower.shop",
+    announcement: process.env.ANNOUNCEMENT || "",
+    guestCheckout: process.env.GUEST_CHECKOUT !== 'false',
+    maintenanceMode: process.env.MAINTENANCE_MODE === 'true',
     defaultMarkupMultiplier: Number(multiplier.toFixed(4)),
-    resellerDiscountPercent: 20,
-    minOrderAmount: 0,
-    currency: "USD",
-    deliveryMultipliers: { standard: 1, fast: 1.35, drip: 1.15 },
-    autoSyncProviderCost: false,
+    resellerDiscountPercent: Number(process.env.RESELLER_DISCOUNT || 20),
+    minOrderAmount: Number(process.env.MIN_ORDER_AMOUNT || 0),
+    currency: process.env.CURRENCY || "USD",
+    deliveryMultipliers: { 
+      standard: Number(process.env.DELIVERY_STANDARD || 1), 
+      fast: Number(process.env.DELIVERY_FAST || 1.35), 
+      drip: Number(process.env.DELIVERY_DRIP || 1.15)
+    },
+    autoSyncProviderCost: process.env.AUTO_SYNC_COST === 'true',
+    baseOrderCount: Number(process.env.BASE_ORDER_COUNT || 0),
   };
 };
 
@@ -66,6 +75,7 @@ function emptyStore(): AdminStore {
     wallets: {},
     payments: [],
     flashSales: [],
+    subscriptions: [],
   };
 }
 
@@ -86,11 +96,63 @@ function mergeStore(raw: Partial<AdminStore> | null | undefined): AdminStore {
     wallets: raw.wallets ?? {},
     payments: raw.payments ?? [],
     flashSales: raw.flashSales ?? [],
+    subscriptions: raw.subscriptions ?? [],
   };
+}
+
+async function readFromSupabase(): Promise<AdminStore | null> {
+  try {
+    const db = createServiceSupabase();
+    if (!db) return null;
+    
+    const { data } = await db
+      .from('admin_settings')
+      .select('*')
+      .single();
+    
+    if (data?.store_data) {
+      return mergeStore(JSON.parse(data.store_data));
+    }
+  } catch (error) {
+    console.log('Supabase read not available, using defaults');
+  }
+  return null;
+}
+
+async function writeToSupabase(store: AdminStore): Promise<void> {
+  try {
+    const db = createServiceSupabase();
+    if (!db) return;
+    
+    await db
+      .from('admin_settings')
+      .upsert({
+        id: 1,
+        store_data: JSON.stringify(store),
+        updated_at: new Date().toISOString()
+      });
+  } catch (error) {
+    console.error('Supabase write failed:', error);
+  }
 }
 
 export async function readStore(): Promise<AdminStore> {
   if (cache && Date.now() - cache.at < 1500) return cache.data;
+  
+  // On Vercel, try Supabase first
+  if (IS_VERCEL) {
+    const supabaseData = await readFromSupabase();
+    if (supabaseData) {
+      cache = { at: Date.now(), data: supabaseData };
+      return supabaseData;
+    }
+    // Fallback to defaults on Vercel
+    const data = emptyStore();
+    cache = { at: Date.now(), data };
+    return data;
+  }
+  
+  // Local development: use file system
   try {
     const text = await readFile(STORE_PATH, "utf8");
     const data = mergeStore(JSON.parse(text) as Partial<AdminStore>);
@@ -104,8 +166,14 @@ export async function readStore(): Promise<AdminStore> {
 }
 
 async function persist(next: AdminStore) {
-  await mkdir(path.dirname(STORE_PATH), { recursive: true });
-  await writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
+  if (IS_VERCEL) {
+    // On Vercel, save to Supabase
+    await writeToSupabase(next);
+  } else {
+    // Local: save to file
+    await mkdir(path.dirname(STORE_PATH), { recursive: true });
+    await writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
+  }
   cache = { at: Date.now(), data: next };
 }
 
