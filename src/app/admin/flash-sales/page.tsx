@@ -303,7 +303,7 @@ export default function AdminFlashSalesPage() {
                       >
                         Edit
                       </button>
-                      <span className="text-white/20">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
+                      <span className="text-white/20">•</span>
                       <button
                         type="button"
                         className="text-xs text-red-400 hover:text-red-300"
@@ -351,7 +351,7 @@ export default function AdminFlashSalesPage() {
                     <div key={sale.id} className="flex items-center justify-between border-t border-white/5 py-2 text-sm opacity-50">
                       <span>{sale.title}</span>
                       <span className="text-xs text-[#9aa3b5]">
-                        {sale.discount}% ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Ended {new Date(sale.endTime).toLocaleDateString()}
+                        {sale.discount}% • Ended {new Date(sale.endTime).toLocaleDateString()}
                       </span>
                     </div>
                   ))}
