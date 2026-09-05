@@ -13,6 +13,7 @@ const items = [
   { href: "/admin/services", label: "Services", icon: SquaresFour },
   { href: "/admin/commerce", label: "Promos", icon: Gift },
   { href: "/admin/flash-sales", label: "Flash Sales", icon: Lightning },
+  { href: "/admin/complete-payment", label: "Complete Payment", icon: Gift },
   { href: "/admin/settings", label: "Settings", icon: GearSix },
   { href: "/admin/analytics", label: "Analytics", icon: ChartPie },
   { href: "/admin/tickets", label: "Tickets", icon: Ticket },
