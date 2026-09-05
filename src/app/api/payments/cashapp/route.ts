@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkCashAppPayment, getCashAppConfig } from "@/lib/cashapp";
+import { checkCashAppPayment, getCashAppConfig, parseCashAppReceipt, isReceiptUsed, markReceiptUsed } from "@/lib/cashapp";
 import { findPaymentByGatewayId, settlePayment } from "@/lib/payments";
 
 /**
@@ -9,7 +9,7 @@ import { findPaymentByGatewayId, settlePayment } from "@/lib/payments";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { orderId } = body;
+    const { orderId, receiptUrl } = body;
 
     if (!orderId) {
       return NextResponse.json(
@@ -43,18 +43,54 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Check email for payment
-    const cashappPayment = await checkCashAppPayment(
-      orderId,
-      payment.amount,
-      config
-    );
+    let cashappPayment = null;
 
-    if (!cashappPayment) {
-      return NextResponse.json({
-        status: "pending",
-        message: "Payment not yet received",
-      });
+    // If receipt URL provided, verify it
+    if (receiptUrl) {
+      // Check if receipt already used
+      if (isReceiptUsed(receiptUrl)) {
+        return NextResponse.json(
+          { error: "This receipt has already been used" },
+          { status: 400 }
+        );
+      }
+
+      try {
+        cashappPayment = await parseCashAppReceipt(
+          receiptUrl,
+          orderId,
+          payment.amount
+        );
+
+        if (!cashappPayment) {
+          return NextResponse.json(
+            { error: "Receipt does not match order details (check amount and note)" },
+            { status: 400 }
+          );
+        }
+
+        // Mark receipt as used
+        markReceiptUsed(receiptUrl, orderId);
+      } catch (error) {
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : "Invalid receipt URL" },
+          { status: 400 }
+        );
+      }
+    } else {
+      // Check email for payment (original method)
+      cashappPayment = await checkCashAppPayment(
+        orderId,
+        payment.amount,
+        config
+      );
+
+      if (!cashappPayment) {
+        return NextResponse.json({
+          status: "pending",
+          message: "Payment not yet received",
+        });
+      }
     }
 
     // Settle the payment

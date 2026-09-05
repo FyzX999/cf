@@ -7,6 +7,7 @@ export interface CashAppPayment {
   note: string;
   date: Date;
   emailId: string;
+  receiptUrl?: string;
 }
 
 export interface CashAppConfig {
@@ -198,4 +199,122 @@ export function getCashAppConfig(): CashAppConfig | null {
     imapPort,
     cashappTag
   };
+}
+
+/**
+ * Parse CashApp web receipt URL to extract receipt ID and fetch details
+ * Example URL: https://cash.app/payments/abc123def456/receipt
+ */
+export async function parseCashAppReceipt(
+  receiptUrl: string,
+  orderId: string,
+  expectedAmount: number
+): Promise<CashAppPayment | null> {
+  try {
+    // Extract receipt ID from URL
+    const match = receiptUrl.match(/cash\.app\/payments\/([a-zA-Z0-9_-]+)/i);
+    if (!match) {
+      throw new Error('Invalid CashApp receipt URL format');
+    }
+
+    const receiptId = match[1];
+
+    // Fetch the receipt page
+    const response = await fetch(receiptUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch receipt');
+    }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Extract amount
+    let amount: number | null = null;
+    $('*').each((_, elem) => {
+      const text = $(elem).text().trim();
+      const match = text.match(/\$(\d+\.\d+)/);
+      if (match && !amount) {
+        const parsed = parseFloat(match[1]);
+        // Only consider amounts close to expected amount
+        if (Math.abs(parsed - expectedAmount) < 0.01) {
+          amount = parsed;
+        }
+      }
+    });
+
+    // Extract note
+    let note: string | null = null;
+    $('.note, [class*="note"], [class*="memo"]').each((_, elem) => {
+      const text = $(elem).text().trim();
+      if (text.includes(orderId)) {
+        note = orderId;
+        return false;
+      }
+    });
+
+    // Fallback: search all text for the order ID
+    if (!note) {
+      const allText = $.text();
+      if (allText.includes(orderId)) {
+        note = orderId;
+      }
+    }
+
+    if (amount !== null && note === orderId) {
+      return {
+        amount,
+        note,
+        date: new Date(),
+        emailId: receiptId,
+        receiptUrl
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error parsing CashApp receipt:', error);
+    throw error;
+  }
+}
+
+/**
+ * Track used receipt URLs to prevent duplicates
+ */
+const usedReceipts = new Map<string, { orderId: string; timestamp: number }>();
+
+/**
+ * Check if a receipt has already been used
+ */
+export function isReceiptUsed(receiptUrl: string): boolean {
+  const match = receiptUrl.match(/cash\.app\/payments\/([a-zA-Z0-9_-]+)/i);
+  if (!match) return false;
+  
+  const receiptId = match[1];
+  const used = usedReceipts.get(receiptId);
+  
+  if (used) {
+    // Clean up old entries (older than 30 days)
+    if (Date.now() - used.timestamp > 30 * 24 * 60 * 60 * 1000) {
+      usedReceipts.delete(receiptId);
+      return false;
+    }
+    return true;
+  }
+  
+  return false;
+}
+
+/**
+ * Mark a receipt as used
+ */
+export function markReceiptUsed(receiptUrl: string, orderId: string): void {
+  const match = receiptUrl.match(/cash\.app\/payments\/([a-zA-Z0-9_-]+)/i);
+  if (match) {
+    usedReceipts.set(match[1], { orderId, timestamp: Date.now() });
+  }
 }

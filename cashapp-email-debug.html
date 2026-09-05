@@ -1,0 +1,475 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+ <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0">
+  <style type="text/css">
+    /* ARCADE DARK MODE MEDIA QUERIES */
+    @media (prefers-color-scheme: dark) {
+      .background-app {
+        background-color: #000000;
+      }
+      .background-extra-prominent {
+        background-color: #595959;
+      }
+      .background-prominent {
+        background-color: #333333;
+      }
+      .background-standard {
+        background-color: #232323;
+      }
+      .background-subtle {
+        background-color: #1A1A1A;
+      }
+      .background-brand {
+        background-color: #00BD46;
+      }
+      .background-keypad {
+        background-color: #000000;
+      }
+      .background-danger {
+        background-color: #F84752;
+      }
+      .border-brand {
+        border-color: #00BD46;
+      }
+      .border-prominent {
+        border-color: #FFFFFF;
+      }
+      .border-standard {
+        border-color: #595959;
+      }
+      .border-subtle {
+        border-color: #232323;
+      }
+      .border-success {
+        border-color: #00D149;
+      }
+      .border-inverse {
+        border-color: #000000;
+      }
+      .border-danger {
+        border-color: #F84752;
+      }
+      .icon-brand {
+        color: #00BD46;
+      }
+      .icon-prominent {
+        color: #FFFFFF;
+      }
+      .icon-standard {
+        color: #E1E1E1;
+      }
+      .icon-subtle {
+        color: #878787;
+      }
+      .icon-extra-subtle {
+        color: #595959;
+      }
+      .icon-inverse {
+        color: #000000;
+      }
+      .icon-disabled {
+        color: #595959;
+      }
+      .icon-danger {
+        color: #F84752;
+      }
+      .icon-warning {
+        color: #f46e38;
+      }
+      .icon-success {
+        color: #00D149;
+      }
+      .icon-info {
+        color: #2B8DE7;
+      }
+      .text-brand {
+        color: #00BD46;
+      }
+      .text-prominent {
+        color: #FFFFFF;
+      }
+      .text-standard {
+        color: #E1E1E1;
+      }
+      .text-subtle {
+        color: #878787;
+      }
+      .text-inverse {
+        color: #000000;
+      }
+      .text-disabled {
+        color: #595959;
+      }
+      .text-placeholder {
+        color: #595959;
+      }
+      .text-danger {
+        color: #F84752;
+      }
+      .text-success {
+        color: #00D149;
+      }
+      .text-warning {
+        color: #f46e38;
+      }
+      .text-link {
+        color: #FFFFFF;
+      }
+      .text-link-visited {
+        color: #AC8EFF;
+      }
+      .button-prominent-background-default {
+        background-color: #00BD46;
+      }
+      .button-prominent-text-default {
+        color: #000000;
+      }
+      .cell-background-default {
+        background-color: #000000;
+      }
+      .cell-controls-icon-default {
+        color: #595959;
+      }
+      .ui-divider-border {
+        border-color: #232323;
+      }
+    }
+  </style>
+  <style type="text/css">
+    /* LOAD CASH SANS FONT */
+    @font-face {
+      font-family: Cash Sans;
+      src: url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff2/CashSans-Regular.woff2) format('woff2');
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: Cash Sans;
+      src: url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff2/CashSans-Medium.woff2) format('woff2');
+      font-weight: 500;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: Cash Sans;
+      src: url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff2/CashSans-Bold.woff2) format('woff2');
+      font-weight: bold;
+      font-style: normal;
+    }
+    @media screen and (min-width: 640px) {
+      .email-container {
+        width: 640px !important;
+      }
+    }
+    /* Create vertical stack in socials footer with logo and social links */
+    @media only screen and (max-width: 450px) {
+      .email-content {
+        padding: 0 24px !important;
+      }
+      .socials-footer-logo {
+        display: block;
+      }
+      .socials-footer-icons {
+        display: block;
+        text-align: left;
+        padding-top: 16px;
+      }
+      .socials-footer-icon {
+        padding-right: 32px !important;
+      }
+    }
+  </style>
+ </head>
+ <body class="background-subtle" style="margin:0;padding:0;min-width: 100%;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;background-color: #F0F0F0;">
+  <div style="font-size:0;max-height:0;overflow:hidden;display:none;mso-hide:all;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+   FyzX paid you $1.
+  </div><!-- Max-width Table -->
+  <table class="receipt-v4 background-subtle" width="100%" cellspacing="0" cellpadding="0" border="0" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;background-color: #F0F0F0;">
+   <tbody>
+    <tr>
+     <td style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"></td>
+     <td align="center" width="640" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+      <table class="email-container" width="100%" cellspacing="0" cellpadding="0" border="0" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;overflow: hidden;  table-layout: fixed;">
+       <!-- Staging Banner -->
+       <tbody>
+        <tr>
+         <td style="padding: 0 24px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"></td>
+        </tr><!-- Cash App Logo -->
+        <tr>
+         <td style="padding: 42px 32px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;" height="48" width="120"><img src="https://cash-s.squarecdn.com/static/email/arcade/cash-app-logo.png" alt="Cash App Logo" height="48" width="120" style="display: block;"></td>
+        </tr>
+        <tr>
+         <td class="email-content" width="100%" align="center" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;padding: 0 32px;"><!-- Content Table -->
+          <table class="background-app" align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-radius:16px;overflow:hidden;table-layout:fixed;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;background-color: #FFFFFF;">
+           <tbody>
+            <tr>
+             <td style="padding: 0 32px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;" width="100%">
+              <table width="100%" cellspacing="0" cellpadding="0" border="0" style="table-layout:fixed;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+               <!-- Top Padding of Content Table -->
+               <tbody>
+                <tr>
+                 <td height="44" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><img src="https://cash-s.squarecdn.com/static/images/alpha.gif" width="1" height="44" alt="" style="display: block;"></td>
+                </tr><!-- Sponsor Account Indicator --> <!-- Account Profile -->
+                <tr>
+                 <td style="padding-bottom:16px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                   <tbody>
+                    <tr>
+                     <td align="left" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><!-- Has single account avatar photo--> <img height="64" width="64" style="border-radius:50%;display: block;" src="https://cash-images-f.squarecdn.com/apps/imgs/nCZt71fdoP9WtHbrX2EPkE.jpeg?width=120" alt=""> <!-- Render placeholder account avatar photo--></td>
+                    </tr>
+                    <tr>
+                     <td align="left" class="text-standard" style="font-size:32px;font-weight:500;line-height:36px;text-align:left;padding-top:16px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;color: #1E1E1E;">FyzX</td>
+                    </tr>
+                    <tr>
+                     <td align="left" class="text-subtle profile-description" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;display:block;  font-size:16px;  line-height:24px;  letter-spacing: 0.005em;  text-align:left;  padding-top:4px;color: #666666;">Today</td>
+                    </tr>
+                    <tr>
+                     <td align="left" class="text-subtle profile-description" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;display:block;  font-size:16px;  line-height:24px;  letter-spacing: 0.005em;  text-align:left;  padding-top:4px;color: #666666;">For CF520599</td>
+                    </tr>
+                   </tbody>
+                  </table></td>
+                </tr><!-- Receipt Amount -->
+                <tr>
+                 <td align="left" style="padding-bottom:32px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                   <tbody>
+                    <tr>
+                     <td style="font-weight:600;line-height:52px;text-align:left;font-size:48px;color:#1E1E1E;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">+$1.00</td>
+                    </tr>
+                   </tbody>
+                  </table></td>
+                </tr><!-- Transaction Details --> <!--  Arcade Section  -->
+                <tr>
+                 <td align="center" style="padding-bottom:32px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                  <table class="ui-divider-border" style="border-top:solid;border-width:1px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;border-color: #E8E8E8;" cellpadding="0" cellspacing="0" width="100%">
+                   <tbody>
+                    <tr>
+                     <td class="text-standard" style="font-size:20px;font-weight:500;line-height:24px;text-align:left;letter-spacing: 0.01em;padding:32px 0 4px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;color: #1E1E1E;">Transaction details</td>
+                    </tr>
+                    <tr>
+                     <td style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                      <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" style="border-collapse: collapse;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                       <tbody>
+                        <tr>
+                         <td width="24" valign="top" style="padding-right:16px;padding-top:16px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><img src="https://cash-s.squarecdn.com/static/email/icons-dark/check24.png" alt="" height="24" width="24" style="display: block;"></td>
+                         <td valign="top" width="100%;" style="padding-top:16px;padding-bottom:16px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                           <tbody>
+                            <tr>
+                             <td align="left" valign="top" class="timeline-row-headline-title" style="width:50%;font-weight: 500;color:#1E1E1E;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;font-size: 16px;  line-height: 24px;  letter-spacing: 0.015em;">Complete</td>
+                            </tr>
+                            <tr>
+                             <td align="left" valign="top" class="timeline-row-subheadline-title" style="width:50%;color:#666666;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;font-size: 14px;  line-height: 20px;  letter-spacing: 0.01em;">Payment received</td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                        </tr>
+                       </tbody>
+                      </table></td>
+                    </tr>
+                    <tr>
+                     <td style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                      <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" style="border-collapse: collapse;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                       <tbody>
+                        <tr>
+                         <td width="24" valign="top" style="padding-right:16px;padding-top:16px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><img src="https://cash-s.squarecdn.com/static/email/icons-dark/avatar24.png" alt="" height="24" width="24" style="display: block;"></td>
+                         <td valign="top" width="100%;" style="padding-top:16px;padding-bottom:16px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                           <tbody>
+                            <tr>
+                             <td align="left" valign="top" class="timeline-row-headline-title" style="width:50%;font-weight: 500;color:#1E1E1E;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;font-size: 16px;  line-height: 24px;  letter-spacing: 0.015em;">Payment between</td>
+                            </tr>
+                            <tr>
+                             <td align="left" valign="top" class="timeline-row-subheadline-title" style="width:50%;color:#666666;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;font-size: 14px;  line-height: 20px;  letter-spacing: 0.01em;">Recipient: Follower Ahmad<br>
+                              Sender: FyzX</td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                        </tr>
+                       </tbody>
+                      </table></td>
+                    </tr>
+                    <tr>
+                     <td style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                      <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" style="border-collapse: collapse;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                       <tbody>
+                        <tr>
+                         <td width="24" valign="top" style="padding-right:16px;padding-top:16px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><img src="https://cash-s.squarecdn.com/static/email/icons-dark/currencyUsd24.png" alt="" height="24" width="24" style="display: block;"></td>
+                         <td valign="top" width="100%;" style="padding-top:16px;padding-bottom:16px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                           <tbody>
+                            <tr>
+                             <td align="left" valign="top" class="timeline-row-headline-title" style="width:50%;font-weight: 500;color:#1E1E1E;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;font-size: 16px;  line-height: 24px;  letter-spacing: 0.015em;">Deposited to</td>
+                            </tr>
+                            <tr>
+                             <td align="left" valign="top" class="timeline-row-subheadline-title" style="width:50%;color:#666666;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;font-size: 14px;  line-height: 20px;  letter-spacing: 0.01em;">Cash balance</td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                        </tr>
+                       </tbody>
+                      </table></td>
+                    </tr>
+                    <tr>
+                     <td style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                      <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" style="border-collapse: collapse;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                       <tbody>
+                        <tr>
+                         <td width="24" valign="top" style="padding-right:16px;padding-top:16px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><img src="https://cash-s.squarecdn.com/static/email/icons-dark/documentCertificate24.png" alt="" height="24" width="24" style="display: block;"></td>
+                         <td valign="top" width="100%;" style="padding-top:16px;padding-bottom:16px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                           <tbody>
+                            <tr>
+                             <td align="left" valign="top" class="timeline-row-headline-title" style="width:50%;font-weight: 500;color:#1E1E1E;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;font-size: 16px;  line-height: 24px;  letter-spacing: 0.015em;">Transaction number</td>
+                            </tr>
+                            <tr>
+                             <td align="left" valign="top" class="timeline-row-subheadline-title" style="width:50%;color:#666666;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;font-size: 14px;  line-height: 20px;  letter-spacing: 0.01em;">#D-N7PZDRZ51</td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                        </tr>
+                       </tbody>
+                      </table></td>
+                    </tr>
+                   </tbody>
+                  </table></td>
+                </tr><!-- Open Receipt Link -->
+                <tr>
+                 <td style="padding-bottom:32px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                  <table class="ui-divider-border" style="border-top:solid;border-width:1px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;border-color: #E8E8E8;" cellpadding="0" cellspacing="0" width="100%">
+                   <tbody>
+                    <tr>
+                     <td style="padding-top:32px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><a href="https://cash.app/launch/activity/receipt/CjAKLgoqUDJQRV9GSUFUXzQ3NjQ0RjYzMDVDOTQ1MkJBNjVGNjVENjg4MEE4NUY0EAQSDwgBEgtDX2gwY3FiMG02ZRgB?accountPid=EE_AYwSsC3-zVt1jNQL48yHfdpyfXeaSDn297osG3c_kZWklNGD&metadata_id=6a61f16529e6882e9a" target="_blank" class="text-standard" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;text-decoration:none;color: #1E1E1E;">
+                       <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                        <tbody>
+                         <tr>
+                          <td height="24" width="24" style="padding:16px 16px 16px 0;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><img src="https://cash-s.squarecdn.com/static/email/icons-dark/deviceMobile24.png" alt="" height="24" width="24" style="display: block;"></td>
+                          <td style="padding:16px 0;font-size:16px;font-weight: 500;line-height: 24px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;" align="left">Open this receipt in Cash App</td>
+                          <td height="24" width="24" style="padding:16px 0 16px 16px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><img src="https://cash-s.squarecdn.com/static/email/arcade/push.png" alt="" height="24" width="24" style="display: block;"></td>
+                         </tr>
+                        </tbody>
+                       </table></a></td>
+                    </tr>
+                   </tbody>
+                  </table></td>
+                </tr><!-- Dividing line above migration banner and legal text -->
+                <tr>
+                 <td class="ui-divider-border" style="width:100%;border-top:solid;border-width:1px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;border-color: #E8E8E8;"></td>
+                </tr><!-- Migration Banner --> <!-- Don't Forward Email Banner -->
+                <tr>
+                 <td style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                  <table id="do-not-forward-warning" cellpadding="0" cellspacing="0" width="100%" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                   <tbody>
+                    <tr>
+                     <td style="padding: 40px 0;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                      <table class="background-subtle" style="border-radius:8px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;background-color: #F0F0F0;" width="100%" cellspacing="0" cellpadding="0">
+                       <tbody>
+                        <tr>
+                         <td style="padding: 20px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;" width="464">
+                          <table cellpadding="0" cellspacing="0" width="100%" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                           <tbody>
+                            <tr>
+                             <td style="padding-bottom: 8px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                              <table cellpadding="0" cellspacing="0" width="100%" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                              <tbody>
+                              <tr>
+                              <td valign="top" height="24" width="24" style="padding-right:8px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><img class="dnf-icon" src="https://cash-s.squarecdn.com/static/email/arcade/alert-fill.png" alt="" height="24" width="24" style="display: block;vertical-align: middle;  display: inline-block;"></td>
+                              <td valign="top" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><span class="dnf-title text-prominent" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;display: inline-block;  vertical-align: middle;  font-size: 16px;  font-weight: 500;  line-height: 24px;  letter-spacing: 0.005em;color: #101010;">Don't forward this email</span></td>
+                              </tr>
+                              </tbody>
+                              </table></td>
+                            </tr>
+                            <tr>
+                             <td style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><span class="dnf-description text-standard" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;font-size: 16px;  line-height: 24px;  letter-spacing: 0.005em;color: #1E1E1E;">Cash App doesn't need this email to assist you. Anyone asking for it could be trying to access your Cash App.</span></td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                        </tr>
+                       </tbody>
+                      </table></td>
+                    </tr>
+                   </tbody>
+                  </table></td>
+                </tr><!-- Legal Text Banner -->
+                <tr>
+                 <td style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                  <table class="text-subtle" style="width:100%;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;color: #666666;">
+                   <tbody>
+                    <tr>
+                    </tr>
+                    <tr>
+                     <td class="legal-text-row" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;line-height:20px;  font-size:14px;  display:block;">
+                      <p style="margin:0px;padding:16px 0 10px;line-height:20px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">For any issues, including the recipient not receiving funds, please contact us at <a href="https://cpxcq1vz.r.us-west-2.awstrack.me/L0/https:%2F%2Fcash.app%2Fcontact%3FaccountPid=EE_AYwSsC3-zVt1jNQL48yHfdpyfXeaSDn297osG3c_kZWklNGD/1/010101a070fcc078-7cbc857a-d839-4ab6-ad3e-0fd224eafdef-000000/uYqQweOtWolidSoEqSZJY4XlIrg=474" class="text-link" target="_blank" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;text-decoration:none;color: #101010;">support</a> or you can reach Cash&nbsp;App&nbsp;Support by calling&nbsp;<a href="tel:+18009691940" class="text-link" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;text-decoration:none;color: #101010;">1&nbsp;(800)&nbsp;969-1940</a>. We're here to help every day from 8&nbsp;AM to 9:30&nbsp;PM&nbsp;ET.</p></td>
+                    </tr>
+                    <tr>
+                     <td class="legal-text-row" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;line-height:20px;  font-size:14px;  display:block;"><span style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><a href="https://cpxcq1vz.r.us-west-2.awstrack.me/L0/https:%2F%2Fcash.app%2Flegal%2Fprivacy/1/010101a070fcc078-7cbc857a-d839-4ab6-ad3e-0fd224eafdef-000000/wbV59Sok6HOVGERSMzny0deAHgA=474" class="text-link" target="_blank" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;text-decoration:none;color: #101010;">Privacy&nbsp;Policy</a> | <a href="https://cpxcq1vz.r.us-west-2.awstrack.me/L0/https:%2F%2Fcash.app%2Flegal%2Ftos/1/010101a070fcc078-7cbc857a-d839-4ab6-ad3e-0fd224eafdef-000000/uVHu-x2ahWlC5xkV41p5O4J45pg=474" class="text-link" target="_blank" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;text-decoration:none;color: #101010;">Terms&nbsp;of&nbsp;Service</a></span></td>
+                    </tr>
+                   </tbody>
+                  </table></td>
+                </tr><!-- Migration Footer -->
+                <tr>
+                 <td style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                  <table id="migration-footer" class="text-subtle" style="width:100%;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;color: #666666;">
+                   <tbody>
+                    <tr>
+                     <td class="legal-text-row" style="padding-top:16px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;line-height:20px;  font-size:14px;  display:block;">Going forward, emails from Cash App for transactions, activity, and security updates will come from <span style="font-weight:500;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">noreply⁠@⁠notifications⁠.⁠cash⁠.⁠app</span>.<br>
+                      You may receive emails from either address while we make the change.</td>
+                    </tr>
+                   </tbody>
+                  </table></td>
+                </tr><!-- Socials Footer -->
+                <tr>
+                 <td style="padding:32px 0;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                   <tbody>
+                    <tr>
+                     <td class="socials-footer-logo" height="48" width="120" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><img src="https://cash-s.squarecdn.com/static/email/arcade/cash-app-logo.png" alt="Cash App Logo" height="48" width="120" style="display: block;"></td>
+                     <td align="right" valign="middle" class="socials-footer-icons" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                      <table style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                       <tbody>
+                        <tr>
+                         <td style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+                           <tbody>
+                            <tr>
+                             <td class="socials-footer-icon" valign="top" height="17" width="17" style="padding-right:40px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><a href="https://cpxcq1vz.r.us-west-2.awstrack.me/L0/https:%2F%2Fx.com%2FCashApp/1/010101a070fcc078-7cbc857a-d839-4ab6-ad3e-0fd224eafdef-000000/VjvRUrymo5dhZrP-MQXIs4gG1MU=474" target="_blank" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;text-decoration:none;"><img alt="X (formerly Twitter)" src="https://cash-s.squarecdn.com/static/email/arcade/x.png" height="17" width="17" style="display: block;"></a></td>
+                             <td class="socials-footer-icon" valign="top" height="18" width="18" style="padding-right:40px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><a href="https://cpxcq1vz.r.us-west-2.awstrack.me/L0/https:%2F%2Fwww.instagram.com%2Fcashapp/1/010101a070fcc078-7cbc857a-d839-4ab6-ad3e-0fd224eafdef-000000/gxip-qsxYnH4lTKZKM-_LJ05How=474" target="_blank" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;text-decoration:none;"><img alt="Instagram" src="https://cash-s.squarecdn.com/static/email/arcade/instagram.png" height="18" width="18" style="display: block;"></a></td>
+                             <td class="socials-footer-icon" valign="top" height="20" width="19" style="padding-right:40px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><a href="https://cpxcq1vz.r.us-west-2.awstrack.me/L0/https:%2F%2Fwww.twitch.tv%2Fcashapp/1/010101a070fcc078-7cbc857a-d839-4ab6-ad3e-0fd224eafdef-000000/8ckQ2fwatBjFZpcXgKnGOl-LNqg=474" target="_blank" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;text-decoration:none;"><img alt="Twitch" src="https://cash-s.squarecdn.com/static/email/arcade/twitch.png" height="20" width="19" style="display: block;"></a></td>
+                             <td class="socials-footer-icon" valign="top" height="18" width="16" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"><a href="https://cpxcq1vz.r.us-west-2.awstrack.me/L0/https:%2F%2Fwww.tiktok.com%2F@cashapp/1/010101a070fcc078-7cbc857a-d839-4ab6-ad3e-0fd224eafdef-000000/g5CP1-Ox0w46gw5TCDosTyVYt-4=474" target="_blank" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;text-decoration:none;"><img alt="Tiktok" src="https://cash-s.squarecdn.com/static/email/arcade/tiktok.png" height="18" width="16" style="display: block;"></a></td>
+                            </tr>
+                           </tbody>
+                          </table></td>
+                        </tr>
+                       </tbody>
+                      </table></td>
+                    </tr>
+                   </tbody>
+                  </table></td>
+                </tr>
+               </tbody>
+              </table></td>
+            </tr>
+           </tbody>
+          </table></td>
+        </tr><!-- Disclaimer Footer -->
+        <tr>
+         <td align="center" style="padding:32px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+          <table width="100%" cellspacing="0" cellpadding="0" border="0" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+           <tbody>
+            <tr>
+             <td style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">
+              <p class="text-subtle disclaimer-footer-text" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;font-size:14px;  font-weight:400;  line-height:20px;  letter-spacing:0.01em;  text-align:left;  display:block;  margin: 0;color: #666666;">Cash&nbsp;App is a service of Block,&nbsp;Inc., 1955 Broadway Street, Suite 600, Oakland, CA 94612. Review <a href="https://cpxcq1vz.r.us-west-2.awstrack.me/L0/https:%2F%2Fblock.xyz%2Flegal%2Flicenses/1/010101a070fcc078-7cbc857a-d839-4ab6-ad3e-0fd224eafdef-000000/5CVuHQdbFnaeyANYJzvxv5QJavY=474" class="text-link" target="_blank" style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;text-decoration:none;color: #101010;">licenses</a>.<span style="display:block;margin-top:12px;font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;">Cash&nbsp;App is a financial services platform, not a bank. Banking services are provided by Cash&nbsp;App's bank partner(s). Prepaid debit cards issued by Sutton&nbsp;Bank, Member FDIC. Cash&nbsp;App Visa® Debit Flex Cards issued by Sutton&nbsp;Bank, Member FDIC, and The Bancorp&nbsp;Bank, N.A., pursuant to a license from Visa U.S.A. Inc. Money transmission and bitcoin services by Block, Inc. Tax preparation services by Cash&nbsp;App&nbsp;Taxes,&nbsp;Inc.</span></p></td>
+            </tr>
+           </tbody>
+          </table></td>
+        </tr>
+       </tbody>
+      </table></td>
+     <td style="font-family: Cash Sans, Helvetica Neue, Arial, sans-serif;"></td>
+    </tr>
+   </tbody>
+  </table>
+ <img alt="" src="https://cpxcq1vz.r.us-west-2.awstrack.me/I0/010101a070fcc078-7cbc857a-d839-4ab6-ad3e-0fd224eafdef-000000/6hKXDxHneT8FK8B7hKoOzgiiVDM=474" style="display: none; width: 1px; height: 1px;">
+</body>
+</html>

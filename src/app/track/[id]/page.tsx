@@ -29,6 +29,7 @@ export default function TrackDetailPage() {
   const [checkingPayment, setCheckingPayment] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState<{ crypto: boolean; cashapp: boolean } | null>(null);
   const [autoCheckAttempts, setAutoCheckAttempts] = useState(0);
+  const [receiptUrl, setReceiptUrl] = useState("");
 
   // Wallet confirmation step
   const [confirmWallet, setConfirmWallet] = useState(false);
@@ -152,7 +153,10 @@ export default function TrackDetailPage() {
       const res = await fetch("/api/payments/cashapp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: cashappInstructions.note }),
+        body: JSON.stringify({ 
+          orderId: cashappInstructions.note,
+          receiptUrl: receiptUrl.trim() || undefined
+        }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to check payment");
@@ -273,6 +277,32 @@ export default function TrackDetailPage() {
                 >
                   {checkingPayment ? "Checking payment…" : "I've sent the payment"}
                 </button>
+                
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-white/10"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-[#0a0a0f] px-2 text-[#9aa3b5]">Payment taking too long?</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs text-[#9aa3b5]">
+                    Paste your CashApp receipt URL for instant verification
+                  </label>
+                  <input
+                    type="text"
+                    className="field w-full text-sm"
+                    placeholder="https://cash.app/payments/abc123..."
+                    value={receiptUrl}
+                    onChange={(e) => setReceiptUrl(e.target.value)}
+                  />
+                  <p className="text-xs text-[#9aa3b5]">
+                    💡 After payment, tap the transaction → Share → Copy Link
+                  </p>
+                </div>
+
                 <button
                   type="button"
                   className="btn btn-ghost w-full"
@@ -282,7 +312,7 @@ export default function TrackDetailPage() {
                 </button>
               </div>
               <p className="muted text-xs">
-                After sending, click the button above. Payment verification may take a few minutes.
+                After sending, click the button above or paste your receipt URL. Payment verification may take a few minutes.
               </p>
             </div>
           )}
