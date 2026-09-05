@@ -26,6 +26,7 @@ export function PaymentButtons({
   const [cashappInstructions, setCashappInstructions] = useState<CashAppInstructions | null>(null);
   const [checkingPayment, setCheckingPayment] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState<{ crypto: boolean; cashapp: boolean } | null>(null);
+  const [autoCheckAttempts, setAutoCheckAttempts] = useState(0);
 
   useEffect(() => {
     // Fetch available payment methods
@@ -34,6 +35,19 @@ export function PaymentButtons({
       .then((config) => setPaymentConfig(config))
       .catch(() => setPaymentConfig({ crypto: false, cashapp: false }));
   }, []);
+
+  // Auto-check CashApp payment every 30 seconds
+  useEffect(() => {
+    if (!cashappInstructions || autoCheckAttempts >= 12) return; // Stop after 6 minutes
+    
+    const timer = setTimeout(() => {
+      setAutoCheckAttempts(prev => prev + 1);
+      checkCashAppPayment();
+    }, 30000); // Check every 30 seconds
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cashappInstructions, autoCheckAttempts]);
 
   async function startPayment(method: PaymentMethod) {
     setBusy(true);
@@ -126,14 +140,24 @@ export function PaymentButtons({
           <button
             type="button"
             className="btn btn-ghost w-full"
-            onClick={() => setCashappInstructions(null)}
+            onClick={() => {
+              setCashappInstructions(null);
+              setAutoCheckAttempts(0);
+            }}
           >
             Cancel
           </button>
         </div>
-        <p className="muted text-xs">
-          After sending, click the button above. Payment verification may take a few minutes.
-        </p>
+        <div className="space-y-1">
+          <p className="muted text-xs">
+            ⏱️ Auto-checking every 30 seconds. Click "I've sent the payment" to check manually.
+          </p>
+          {autoCheckAttempts > 0 && (
+            <p className="text-xs text-blue-400">
+              Checked {autoCheckAttempts} time{autoCheckAttempts > 1 ? 's' : ''}. Will stop after 6 minutes.
+            </p>
+          )}
+        </div>
         {error && <p className="text-sm text-[#f07167]">{error}</p>}
       </div>
     );

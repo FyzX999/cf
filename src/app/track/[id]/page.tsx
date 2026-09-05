@@ -28,6 +28,7 @@ export default function TrackDetailPage() {
   } | null>(null);
   const [checkingPayment, setCheckingPayment] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState<{ crypto: boolean; cashapp: boolean } | null>(null);
+  const [autoCheckAttempts, setAutoCheckAttempts] = useState(0);
 
   // Wallet confirmation step
   const [confirmWallet, setConfirmWallet] = useState(false);
@@ -86,6 +87,19 @@ export default function TrackDetailPage() {
     if (paid) setNote("Payment received. Delivery starts automatically once the network confirms.");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-check CashApp payment every 30 seconds
+  useEffect(() => {
+    if (!cashappInstructions || autoCheckAttempts >= 12) return; // Stop after 6 minutes (12 x 30s)
+    
+    const timer = setTimeout(() => {
+      setAutoCheckAttempts(prev => prev + 1);
+      checkCashAppPayment();
+    }, 30000); // Check every 30 seconds
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cashappInstructions, autoCheckAttempts]);
 
   async function payCrypto() {
     if (!order) return;
