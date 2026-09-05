@@ -27,6 +27,7 @@ export default function AdminCommercePage() {
   const [giftCount, setGiftCount] = useState(1);
   const [debugData, setDebugData] = useState<any>(null);
   const [debugBusy, setDebugBusy] = useState(false);
+  const [configData, setConfigData] = useState<any>(null);
 
   async function load() {
     const res = await fetch("/api/admin/commerce", { cache: "no-store" });
@@ -142,6 +143,20 @@ export default function AdminCommercePage() {
     }
   }
 
+  async function checkConfig() {
+    try {
+      const res = await fetch("/api/admin/cashapp-config");
+      const json = await res.json();
+      setConfigData(json);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Config check failed");
+    }
+  }
+
+  useEffect(() => {
+    checkConfig();
+  }, []);
+
   return (
     <AdminShell title="Promos & gift cards">
       {error && <p className="mb-4 text-sm text-[#f07167]">{error}</p>}
@@ -149,7 +164,7 @@ export default function AdminCommercePage() {
 
       {/* CashApp Debug Section */}
       <div className="glass mb-6 p-5">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <p className="font-semibold">CashApp Payment Debug</p>
           <button
             type="button"
@@ -160,6 +175,30 @@ export default function AdminCommercePage() {
             {debugBusy ? "Checking..." : "Check Recent Emails"}
           </button>
         </div>
+
+        {/* Config Status */}
+        {configData && (
+          <div className="mb-4 rounded bg-black/30 p-3 text-xs font-mono">
+            {configData.configured ? (
+              <div className="text-green-400">
+                <p>✅ CashApp Configured</p>
+                <p className="mt-1 text-gray-400">Email: {configData.config?.emailMasked}</p>
+                <p className="text-gray-400">IMAP: {configData.config?.imapHost}:{configData.config?.imapPort}</p>
+                <p className="text-gray-400">Tag: {configData.config?.cashappTag}</p>
+                <p className="text-gray-400">Password: {configData.config?.passwordSet ? 'Set' : 'Missing'}</p>
+              </div>
+            ) : (
+              <div className="text-red-400">
+                <p>❌ CashApp Not Configured</p>
+                <p className="mt-1">Missing environment variables:</p>
+                {Object.entries(configData.missing || {}).map(([key, missing]) => 
+                  missing ? <p key={key} className="text-xs">- CASHAPP_{key.toUpperCase()}</p> : null
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {debugData && (
           <div className="mt-4 space-y-3">
             <div className="text-sm">

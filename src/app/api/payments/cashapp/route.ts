@@ -21,11 +21,14 @@ export async function POST(req: NextRequest) {
     // Get CashApp config
     const config = getCashAppConfig();
     if (!config) {
+      console.error('[CashApp API] Config not found - check environment variables');
       return NextResponse.json(
         { error: "CashApp is not configured" },
         { status: 503 }
       );
     }
+
+    console.log(`[CashApp API] Config loaded: email=${config.email}, host=${config.imapHost}:${config.imapPort}, tag=${config.cashappTag}`);
 
     // Find the pending payment record
     const payment = await findPaymentByGatewayId(orderId);
