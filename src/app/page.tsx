@@ -1,4 +1,4 @@
-import { FlashSaleBanner, LiveOrderCounter } from "@/components/marketing";
+import { FlashSaleBanner, LiveOrderCounter, ReviewsShowcase } from "@/components/marketing";
 import { FeatureGrid } from "@/components/FeatureGrid";
 import { OrderWidget } from "@/components/OrderWidget";
 import { Reveal } from "@/components/Reveal";
@@ -72,6 +72,10 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+      </Reveal>
+
+      <Reveal delay={100}>
+        <ReviewsShowcase />
       </Reveal>
 
       {!user && (
