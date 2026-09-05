@@ -42,7 +42,7 @@ export default function AdminSettingsPage() {
   if (!settings) {
     return (
       <AdminShell title="Store settings">
-        <p className="muted text-sm">{error ?? "Loadingâ€¦"}</p>
+        <p className="muted text-sm">{error ?? "LoadingÃ¢â‚¬Â¦"}</p>
       </AdminShell>
     );
   }
@@ -82,7 +82,7 @@ export default function AdminSettingsPage() {
             value={settings.defaultMarkupMultiplier}
             onChange={(e) => setSettings({ ...settings, defaultMarkupMultiplier: Number(e.target.value) })}
           />
-          <p className="muted mt-1 text-xs">Used for new items and bulk apply. 1.8Ã— means 80% profit on cost.</p>
+          <p className="muted mt-1 text-xs">Used for new items and bulk apply. 1.8Ãƒâ€” means 80% profit on cost.</p>
         </label>
         <label className="text-sm">
           <span className="muted mb-1 block">Reseller discount %</span>
@@ -172,7 +172,7 @@ export default function AdminSettingsPage() {
       </div>
 
       <button className="btn btn-primary mt-8" disabled={busy} onClick={save}>
-        {busy ? "Savingâ€¦" : "Save settings"}
+        {busy ? "SavingÃ¢â‚¬Â¦" : "Save settings"}
       </button>
     </AdminShell>
   );

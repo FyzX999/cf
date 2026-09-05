@@ -20,13 +20,19 @@ export async function PUT(req: Request) {
   try {
     const body = await req.json();
     
-    // Ensure numeric fields are numbers
+    // Sanitize fields while preserving all data
     const sanitized: Partial<SiteSettings> = {
       ...body,
+      // Ensure numeric fields are numbers
       defaultMarkupMultiplier: Number(body.defaultMarkupMultiplier),
       resellerDiscountPercent: Number(body.resellerDiscountPercent),
       minOrderAmount: Number(body.minOrderAmount),
-      baseOrderCount: body.baseOrderCount ? Number(body.baseOrderCount) : undefined,
+      baseOrderCount: body.baseOrderCount !== undefined ? Number(body.baseOrderCount) : undefined,
+      // Ensure boolean fields are booleans
+      guestCheckout: Boolean(body.guestCheckout),
+      maintenanceMode: Boolean(body.maintenanceMode),
+      autoSyncProviderCost: Boolean(body.autoSyncProviderCost),
+      // Ensure delivery multipliers are numbers
       deliveryMultipliers: {
         standard: Number(body.deliveryMultipliers?.standard || 1),
         fast: Number(body.deliveryMultipliers?.fast || 1.35),
