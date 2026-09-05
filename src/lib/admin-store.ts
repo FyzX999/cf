@@ -1,4 +1,4 @@
-﻿import { mkdir, readFile, writeFile } from "fs/promises";
+import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { createServiceSupabase } from "./supabase";
 import type {
@@ -230,7 +230,7 @@ export async function updateServiceOverrides(updates: Record<string, ServiceOver
 
 export async function appendAudit(action: string, target: string, actor = "admin") {
   const entry: AuditEntry = {
-    id: ${Date.now()}-,
+    id: `${Date.now()}-${Math.floor(Math.random() * 9999)}`,
     time: new Date().toISOString(),
     actor,
     action,
