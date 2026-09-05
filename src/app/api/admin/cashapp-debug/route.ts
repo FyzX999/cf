@@ -21,7 +21,7 @@ async function requireAdmin(req: NextRequest) {
  * GET /api/admin/cashapp-debug
  * Debug CashApp email fetching - shows recent emails and parsing results
  */
-export async function GET(req: NextRequest) {
+export async function GET(req: NextRequest): Promise<NextResponse> {
   const authError = await requireAdmin(req);
   if (authError) return authError;
 
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return new Promise((resolve) => {
+    return new Promise<NextResponse>((resolve) => {
       const imap = new Imap({
         user: config.email,
         password: config.password,
