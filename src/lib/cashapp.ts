@@ -24,26 +24,45 @@ function parseCashAppEmail(html: string): { amount: number; note: string } | nul
   try {
     const $ = cheerio.load(html);
     
-    // Find amount - looking for pattern like <div class="value">$XX.XX</div>
+    // Find amount - looking for +$XX.XX pattern
     let amount: number | null = null;
-    $('div.value').each((_, elem) => {
-      const text = $(elem).text().trim();
-      const match = text.match(/\$(\d+\.\d+)/);
-      if (match) {
-        amount = parseFloat(match[1]);
-        return false; // break
-      }
-    });
+    
+    // Try multiple selectors for amount
+    const amountSelectors = ['td', 'div', 'span'];
+    for (const selector of amountSelectors) {
+      $(selector).each((_, elem) => {
+        const text = $(elem).text().trim();
+        const match = text.match(/\+?\$(\d+\.\d+)/);
+        if (match && !amount) {
+          amount = parseFloat(match[1]);
+          return false; // break
+        }
+      });
+      if (amount) break;
+    }
 
-    // Find note - looking for <div class="text note" ...>...</div>
+    // Find note - looking for "For XXXXX" pattern in profile-description
     let note: string | null = null;
-    $('div.text.note').each((_, elem) => {
+    
+    // Look for the specific class used by CashApp
+    $('.profile-description, .text-subtle').each((_, elem) => {
       const text = $(elem).text().trim();
-      if (text) {
-        note = text;
+      // Match "For [ORDER_ID]" pattern
+      const match = text.match(/^For\s+(.+)$/i);
+      if (match) {
+        note = match[1].trim();
         return false; // break
       }
     });
+    
+    // Fallback: search all text for "For [alphanumeric]" pattern
+    if (!note) {
+      const allText = $.text();
+      const match = allText.match(/For\s+([A-Z0-9]+)/i);
+      if (match) {
+        note = match[1].trim();
+      }
+    }
 
     if (amount !== null && note) {
       return { amount, note };
