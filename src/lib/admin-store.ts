@@ -86,8 +86,22 @@ function mergeStore(raw: Partial<AdminStore> | null | undefined): AdminStore {
   const base = emptyStore();
   if (!raw) return base;
   const promoCodes = raw.promoCodes?.length ? raw.promoCodes : base.promoCodes;
+  
+  // Merge settings properly, ensuring all fields from raw take precedence
+  const mergedSettings = {
+    ...base.settings,
+    ...raw.settings,
+    deliveryMultipliers: {
+      ...base.settings.deliveryMultipliers,
+      ...raw.settings?.deliveryMultipliers
+    }
+  };
+  
+  console.log('[mergeStore] raw.settings:', JSON.stringify(raw.settings));
+  console.log('[mergeStore] mergedSettings.baseOrderCount:', mergedSettings.baseOrderCount);
+  
   return {
-    settings: { ...base.settings, ...raw.settings, deliveryMultipliers: { ...base.settings.deliveryMultipliers, ...raw.settings?.deliveryMultipliers } },
+    settings: mergedSettings,
     services: raw.services ?? {},
     tickets: raw.tickets ?? [],
     audit: raw.audit ?? [],
