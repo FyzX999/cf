@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ChartPie, GearSix, Gift, ListChecks, SquaresFour, Ticket, Users, ShieldCheck } from "@phosphor-icons/react";
+import { ChartPie, GearSix, Gift, ListChecks, SquaresFour, Ticket, Users, ShieldCheck, Lightning } from "@phosphor-icons/react";
 import { Logo } from "./Logo";
 import { clsx } from "@/lib/format";
 
@@ -12,6 +12,7 @@ const items = [
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/services", label: "Services", icon: SquaresFour },
   { href: "/admin/commerce", label: "Promos", icon: Gift },
+  { href: "/admin/flash-sales", label: "Flash Sales", icon: Lightning },
   { href: "/admin/settings", label: "Settings", icon: GearSix },
   { href: "/admin/analytics", label: "Analytics", icon: ChartPie },
   { href: "/admin/tickets", label: "Tickets", icon: Ticket },

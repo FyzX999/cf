@@ -1,3 +1,4 @@
+import { FlashSaleBanner } from "@/components/marketing";
 import { FeatureGrid } from "@/components/FeatureGrid";
 import { OrderWidget } from "@/components/OrderWidget";
 import { Reveal } from "@/components/Reveal";
@@ -15,6 +16,9 @@ export default async function HomePage() {
       {settings.announcement && (
         <p className="mt-6 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-center text-sm">{settings.announcement}</p>
       )}
+      
+      <FlashSaleBanner placement="homepage" className="mt-6" />
+      
       <section className="grid gap-10 py-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
         <div className="hero-copy">
           <p className="mb-4 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-[#9aa3b5]">
@@ -49,7 +53,7 @@ export default async function HomePage() {
         <div className="mb-6 flex items-end justify-between">
           <div>
             <h2 className="text-2xl font-semibold">Platform marketplace</h2>
-            <p className="muted mt-1 text-sm">Services are grouped by platform — not dumped into one giant dropdown.</p>
+            <p className="muted mt-1 text-sm">Services are grouped by platform - not dumped into one giant dropdown.</p>
           </div>
           <Link href="/platforms" className="btn btn-ghost">
             View all
