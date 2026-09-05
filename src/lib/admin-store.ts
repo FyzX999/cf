@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "fs/promises";
+﻿import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { createServiceSupabase } from "./supabase";
 import type {
@@ -105,16 +105,32 @@ async function readFromSupabase(): Promise<AdminStore | null> {
     const db = createServiceSupabase();
     if (!db) return null;
     
-    const { data } = await db
+    const { data, error } = await db
       .from('admin_settings')
-      .select('*')
+      .select('store_data')
+      .eq('id', 1)
       .single();
     
+    if (error) {
+      console.log('[Supabase] Read error:', error.message);
+      return null;
+    }
+    
     if (data?.store_data) {
-      return mergeStore(JSON.parse(data.store_data));
+      console.log('[Supabase] Raw store_data type:', typeof data.store_data);
+      console.log('[Supabase] Raw store_data:', JSON.stringify(data.store_data).substring(0, 200));
+      
+      // JSONB columns are already parsed as objects by Supabase client
+      const parsed = typeof data.store_data === 'string' 
+        ? JSON.parse(data.store_data) 
+        : data.store_data;
+      
+      const merged = mergeStore(parsed as Partial<AdminStore>);
+      console.log('[Supabase] Merged baseOrderCount:', merged.settings.baseOrderCount);
+      return merged;
     }
   } catch (error) {
-    console.log('Supabase read not available, using defaults');
+    console.error('[Supabase] Read exception:', error);
   }
   return null;
 }
@@ -128,7 +144,7 @@ async function writeToSupabase(store: AdminStore): Promise<void> {
       .from('admin_settings')
       .upsert({
         id: 1,
-        store_data: JSON.stringify(store),
+        store_data: store,
         updated_at: new Date().toISOString()
       });
   } catch (error) {
@@ -214,7 +230,7 @@ export async function updateServiceOverrides(updates: Record<string, ServiceOver
 
 export async function appendAudit(action: string, target: string, actor = "admin") {
   const entry: AuditEntry = {
-    id: `${Date.now()}-${Math.floor(Math.random() * 9999)}`,
+    id: ${Date.now()}-,
     time: new Date().toISOString(),
     actor,
     action,
