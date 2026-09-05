@@ -112,6 +112,24 @@ export function PaymentButtons({
     return (
       <div className="space-y-4 rounded-lg border border-white/10 bg-white/5 p-4">
         <h3 className="font-semibold">Complete CashApp Payment</h3>
+        
+        {/* QR Code */}
+        <div className="flex justify-center py-4">
+          <img 
+            src={`https://cash.app/qr/${cashappInstructions.cashappTag}?size=288&margin=0&bg=000000&logoColor=ffffff&format=svg`}
+            alt={`QR code for ${cashappInstructions.cashappTag}`}
+            className="rounded-lg border border-white/10 p-2 bg-black"
+            width={200}
+            height={200}
+          />
+        </div>
+        
+        <p className="text-center text-sm text-green-400 font-semibold">
+          Scan to pay with CashApp
+        </p>
+        
+        <div className="text-center text-xs text-gray-500">or</div>
+        
         <div className="space-y-3 text-sm">
           <div>
             <p className="muted mb-1">1. Send exactly:</p>
