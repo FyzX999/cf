@@ -5,6 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import { platforms as seedPlatforms } from "@/lib/catalog";
 import { money } from "@/lib/format";
 import type { Platform, Service } from "@/lib/types";
+import type { Metadata } from "next";
+
+// Can't export metadata from client component, will handle in layout
+// This page needs to remain client-side for the interactive filters
 
 export default function ServicesPage() {
   const [q, setQ] = useState("");
@@ -35,16 +39,22 @@ export default function ServicesPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="text-3xl font-semibold">Services</h1>
-      <p className="muted mt-2">Filter by platform, refill, quality, or search.</p>
+      <h1 className="text-3xl font-semibold">Buy Cheap Social Media Marketing Services</h1>
+      <p className="muted mt-2">Filter by platform, search for Instagram followers, TikTok views, YouTube subscribers, and more SMM services</p>
       <div className="mt-6 grid gap-3 md:grid-cols-[1fr_200px_auto]">
         <input
           className="field"
-          placeholder="Search Instagram followers"
+          placeholder="Search cheap Instagram followers, TikTok views..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          aria-label="Search social media services"
         />
-        <select className="field cursor-pointer" value={platform} onChange={(e) => setPlatform(e.target.value)}>
+        <select 
+          className="field cursor-pointer" 
+          value={platform} 
+          onChange={(e) => setPlatform(e.target.value)}
+          aria-label="Filter by platform"
+        >
           <option value="all">All platforms</option>
           {platforms.map((p) => (
             <option key={p.slug} value={p.slug}>
@@ -73,10 +83,15 @@ export default function ServicesPage() {
               {s.refill && <span className="rounded-full bg-white/5 px-2 py-1">Refill</span>}
               <span className="rounded-full bg-white/5 px-2 py-1">No password</span>
             </div>
-            <span className="btn btn-primary mt-4 w-full">Order</span>
+            <span className="btn btn-primary mt-4 w-full">Order Now</span>
           </Link>
         ))}
       </div>
+      {results.length === 0 && (
+        <p className="text-center text-sm text-[#9aa3b5] py-12">
+          No services found. Try adjusting your search or filters.
+        </p>
+      )}
     </div>
   );
 }

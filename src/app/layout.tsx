@@ -10,20 +10,82 @@ const sans = Plus_Jakarta_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 const mono = JetBrains_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
+const siteUrl = 'https://cheapfollower.shop'
+const siteName = 'CheapFollower'
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
-    default: "cheapfollower.shop — Social growth without the complicated price tag",
-    template: "%s · cheapfollower.shop",
+    default: "Cheap Followers & Social Media Marketing Services | CheapFollower",
+    template: "%s | CheapFollower",
   },
   description:
-    "Buy social media marketing services across Instagram, TikTok, YouTube and more from one dashboard. Instant pricing, live tracking, wallet, reseller API.",
+    "Buy cheap Instagram followers, TikTok views, YouTube subscribers & more. Instant delivery, affordable SMM services, crypto payments, and reseller API access.",
+  keywords: [
+    "cheap followers",
+    "buy instagram followers",
+    "cheap instagram followers",
+    "tiktok views",
+    "youtube subscribers",
+    "smm panel",
+    "social media marketing",
+    "buy tiktok followers",
+    "cheap tiktok likes",
+    "instagram likes",
+    "smm services",
+    "social media growth",
+  ],
+  authors: [{ name: siteName }],
+  creator: siteName,
+  publisher: siteName,
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: siteUrl,
+    siteName,
+    title: "Cheap Followers & Social Media Marketing Services | CheapFollower",
+    description: "Buy affordable Instagram followers, TikTok views, YouTube subscribers. Instant SMM services with crypto payments and reseller API.",
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'CheapFollower - Affordable Social Media Marketing Services',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Cheap Followers & Social Media Marketing | CheapFollower",
+    description: "Affordable Instagram followers, TikTok views, YouTube subscribers. Instant delivery. Crypto payments accepted.",
+    images: ['/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    // Add when available: google: 'your-verification-code',
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -40,3 +102,4 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     </html>
   );
 }
+
