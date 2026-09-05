@@ -99,6 +99,7 @@ export type SiteSettings = {
     drip: number;
   };
   autoSyncProviderCost: boolean;
+  baseOrderCount?: number;
 };
 
 export type StoredTicket = {
@@ -135,6 +136,9 @@ export type PromoCode = {
   maxUses: number;
   uses: number;
   minOrder: number;
+  newUsersOnly?: boolean;
+  firstOrderOnly?: boolean;
+  expiresAt?: string;
 };
 
 export type GiftCard = {

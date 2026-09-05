@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServiceSupabase } from '@/lib/supabase';
 import { calculateOrderStats } from '@/lib/order-counter';
+import { readStore } from '@/lib/admin-store';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,12 +12,15 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET() {
   try {
+    const store = await readStore();
+    const baseCount = store.settings.baseOrderCount || 0;
+    
     const db = createServiceSupabase();
     
     if (!db) {
-      // Fallback to mock data if Supabase not configured
+      // Fallback to base count + mock data if Supabase not configured
       return NextResponse.json({
-        totalOrders: 12847,
+        totalOrders: baseCount + 12847,
         ordersToday: 156,
         ordersThisWeek: 892,
         ordersThisMonth: 3421,
@@ -44,14 +48,17 @@ export async function GET() {
     }));
 
     const stats = calculateOrderStats(orders);
-    stats.totalOrders = totalCount || stats.totalOrders;
+    stats.totalOrders = (totalCount || 0) + baseCount;
 
     return NextResponse.json(stats);
   } catch (error) {
     console.error('Error fetching order stats:', error);
-    // Return mock data on error to keep social proof working
+    const store = await readStore();
+    const baseCount = store.settings.baseOrderCount || 0;
+    
+    // Return base count + mock data on error
     return NextResponse.json({
-      totalOrders: 12500,
+      totalOrders: baseCount + 12500,
       ordersToday: 150,
       ordersThisWeek: 850,
       ordersThisMonth: 3400,

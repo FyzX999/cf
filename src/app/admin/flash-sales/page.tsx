@@ -22,35 +22,58 @@ export default function AdminFlashSalesPage() {
   });
 
   async function load() {
-    const [salesRes, catalogRes] = await Promise.all([
-      fetch("/api/admin/flash-sales", { cache: "no-store" }),
-      fetch("/api/catalog", { cache: "no-store" })
-    ]);
-    
-    const salesJson = await salesRes.json();
-    const catalogJson = await catalogRes.json();
-    
-    if (!salesRes.ok) throw new Error(salesJson.error || "Failed to load flash sales");
-    
-    setFlashSales(salesJson.flashSales ?? []);
-    
-    // Flatten catalog to get all services
-    const allServices: any[] = [];
-    if (catalogJson.platforms) {
-      catalogJson.platforms.forEach((platform: any) => {
-        platform.categories?.forEach((category: any) => {
-          category.services?.forEach((service: any) => {
-            allServices.push({
-              id: service.id,
-              name: service.name,
-              platform: platform.name,
-              category: category.name
+    try {
+      const [salesRes, catalogRes] = await Promise.all([
+        fetch("/api/admin/flash-sales", { cache: "no-store" }),
+        fetch("/api/catalog", { cache: "no-store" })
+      ]);
+      
+      const salesJson = await salesRes.json();
+      const catalogJson = await catalogRes.json();
+      
+      if (!salesRes.ok) throw new Error(salesJson.error || "Failed to load flash sales");
+      
+      setFlashSales(salesJson.flashSales ?? []);
+      
+      // Flatten catalog to get all services
+      const allServices: any[] = [];
+      
+      // Handle both old and new catalog format
+      if (Array.isArray(catalogJson)) {
+        // New format: array of platforms
+        catalogJson.forEach((platform: any) => {
+          platform.categories?.forEach((category: any) => {
+            category.services?.forEach((service: any) => {
+              allServices.push({
+                id: service.id,
+                name: service.name,
+                platform: platform.name,
+                category: category.name
+              });
             });
           });
         });
-      });
+      } else if (catalogJson.platforms) {
+        // Old format: { platforms: [] }
+        catalogJson.platforms.forEach((platform: any) => {
+          platform.categories?.forEach((category: any) => {
+            category.services?.forEach((service: any) => {
+              allServices.push({
+                id: service.id,
+                name: service.name,
+                platform: platform.name,
+                category: category.name
+              });
+            });
+          });
+        });
+      }
+      
+      setServices(allServices);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load");
     }
-    setServices(allServices);
   }
 
   useEffect(() => {
@@ -235,7 +258,7 @@ export default function AdminFlashSalesPage() {
                   <span className="flex-1">
                     {service.name}
                     <span className="ml-2 text-xs text-[#9aa3b5]">
-                      {service.platform} • {service.category}
+                      {service.platform} â€¢ {service.category}
                     </span>
                   </span>
                 </label>
@@ -283,7 +306,7 @@ export default function AdminFlashSalesPage() {
                       >
                         Edit
                       </button>
-                      <span className="text-white/20">•</span>
+                      <span className="text-white/20">â€¢</span>
                       <button
                         type="button"
                         className="text-xs text-red-400 hover:text-red-300"
@@ -331,7 +354,7 @@ export default function AdminFlashSalesPage() {
                     <div key={sale.id} className="flex items-center justify-between border-t border-white/5 py-2 text-sm opacity-50">
                       <span>{sale.title}</span>
                       <span className="text-xs text-[#9aa3b5]">
-                        {sale.discount}% • Ended {new Date(sale.endTime).toLocaleDateString()}
+                        {sale.discount}% â€¢ Ended {new Date(sale.endTime).toLocaleDateString()}
                       </span>
                     </div>
                   ))}
