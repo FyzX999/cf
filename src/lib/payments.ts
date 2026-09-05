@@ -28,6 +28,11 @@ export function paymentConfig() {
   return {
     paypal: false,
     crypto: Boolean(process.env.NOWPAYMENTS_API_KEY),
+    cashapp: Boolean(
+      process.env.CASHAPP_TAG &&
+      process.env.CASHAPP_EMAIL &&
+      process.env.CASHAPP_EMAIL_PASSWORD
+    ),
   };
 }
 
@@ -92,7 +97,7 @@ export async function findPaymentByGatewayId(gatewayId: string) {
   return store.payments.find((p) => p.gatewayId === gatewayId) ?? null;
 }
 
-async function settlePayment(record: PaymentRecord) {
+export async function settlePayment(record: PaymentRecord) {
   const outcome: { claimed?: PaymentRecord; already?: PaymentRecord } = {};
   await writeStore((store) => {
     const current = store.payments.find((p) => p.id === record.id || p.gatewayId === record.gatewayId);
@@ -443,6 +448,43 @@ export async function handlePaypalWebhookEvent(event: {
   return { ignored: true, type };
 }
 
+export async function createCashAppInvoice(input: {
+  kind: PaymentKind;
+  amount: number;
+  publicId?: string;
+  userId?: string;
+}) {
+  const cashappTag = process.env.CASHAPP_TAG;
+  if (!cashappTag) throw new Error("CashApp is not configured. Set CASHAPP_TAG.");
+  const amount = Number(input.amount.toFixed(2));
+  if (!(amount > 0)) throw new Error("Amount must be greater than zero");
+
+  // For CashApp, we create a "pending" payment record and return instructions
+  // The actual payment verification happens via email monitoring
+  const record: PaymentRecord = {
+    id: `pay_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`,
+    provider: "cashapp",
+    kind: input.kind,
+    status: "pending",
+    amount,
+    publicId: input.publicId,
+    userId: input.userId,
+    gatewayId: input.publicId || `wallet-${input.userId}`, // Use order ID as gateway ID
+    createdAt: new Date().toISOString(),
+  };
+  await savePayment(record);
+
+  // Return instructions instead of redirect URL
+  return {
+    payment: record,
+    instructions: {
+      cashappTag,
+      amount,
+      note: input.publicId || `WALLET-${input.userId}`, // Customer must include this in payment note
+    },
+  };
+}
+
 export type CheckoutMethod = PaymentProvider;
 
 export async function startCheckout(input: {
@@ -453,5 +495,6 @@ export async function startCheckout(input: {
   userId?: string;
 }) {
   if (input.method === "paypal") return createPaypalCheckout(input);
+  if (input.method === "cashapp") return createCashAppInvoice(input);
   return createCryptoInvoice(input);
 }

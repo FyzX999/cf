@@ -167,7 +167,7 @@ export type StoredWallet = {
   transactions: WalletTxn[];
 };
 
-export type PaymentProvider = "paypal" | "nowpayments";
+export type PaymentProvider = "paypal" | "nowpayments" | "cashapp";
 
 export type PaymentKind = "order" | "wallet";
 

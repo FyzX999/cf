@@ -18,8 +18,16 @@ export default function TrackDetailPage() {
   const [giftCardCode, setGiftCardCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [cryptoBusy, setCryptoBusy] = useState(false);
+  const [cashappBusy, setCashappBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [cashappInstructions, setCashappInstructions] = useState<{
+    cashappTag: string;
+    amount: number;
+    note: string;
+  } | null>(null);
+  const [checkingPayment, setCheckingPayment] = useState(false);
+  const [paymentConfig, setPaymentConfig] = useState<{ crypto: boolean; cashapp: boolean } | null>(null);
 
   // Wallet confirmation step
   const [confirmWallet, setConfirmWallet] = useState(false);
@@ -67,6 +75,13 @@ export default function TrackDetailPage() {
   // Load wallet balance once on mount (best-effort; no auth = ignore)
   useEffect(() => {
     loadWallet().catch(() => undefined);
+    
+    // Fetch payment config
+    fetch("/api/payments/config")
+      .then((res) => res.json())
+      .then((config) => setPaymentConfig(config))
+      .catch(() => setPaymentConfig({ crypto: false, cashapp: false }));
+    
     const paid = new URLSearchParams(window.location.search).get("paid");
     if (paid) setNote("Payment received. Delivery starts automatically once the network confirms.");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -90,6 +105,53 @@ export default function TrackDetailPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Checkout failed");
       setCryptoBusy(false);
+    }
+  }
+
+  async function payCashApp() {
+    if (!order) return;
+    setCashappBusy(true);
+    setError(null);
+    setNote(null);
+    try {
+      const res = await fetch("/api/payments/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ method: "cashapp", kind: "order", publicId: order.publicId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Checkout failed");
+      if (!json.instructions) throw new Error("Payment instructions missing");
+      setCashappInstructions(json.instructions);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Checkout failed");
+    } finally {
+      setCashappBusy(false);
+    }
+  }
+
+  async function checkCashAppPayment() {
+    if (!cashappInstructions) return;
+    setCheckingPayment(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/payments/cashapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: cashappInstructions.note }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to check payment");
+
+      if (json.status === "completed") {
+        window.location.href = `/track/${order?.publicId}?paid=cashapp`;
+      } else {
+        setError("Payment not yet received. Please wait a few moments after sending.");
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to check payment");
+    } finally {
+      setCheckingPayment(false);
     }
   }
 
@@ -161,115 +223,185 @@ export default function TrackDetailPage() {
 
       {!order.paid && (
         <div className="glass mt-8 space-y-5 p-6">
-          {/* Wallet balance display */}
-          {isAuthenticated && walletBalance !== null && (
-            <div className="rounded-lg border border-[#3ddc97]/20 bg-[#3ddc97]/5 px-4 py-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-[#9aa3b5]">Your wallet balance</span>
-                <span className="text-lg font-semibold text-[#3ddc97]">{money(walletBalance)}</span>
+          {/* CashApp Instructions Modal */}
+          {cashappInstructions && (
+            <div className="space-y-4 rounded-lg border border-[#3ddc97]/20 bg-[#3ddc97]/5 p-4">
+              <h3 className="font-semibold">Complete CashApp Payment</h3>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="muted mb-1">1. Send exactly:</p>
+                  <p className="font-mono text-lg font-semibold text-[#3ddc97]">
+                    ${cashappInstructions.amount.toFixed(2)}
+                  </p>
+                </div>
+                <div>
+                  <p className="muted mb-1">2. To CashApp:</p>
+                  <p className="font-mono text-lg font-semibold">{cashappInstructions.cashappTag}</p>
+                </div>
+                <div>
+                  <p className="muted mb-1">3. Include this note (required):</p>
+                  <p className="font-mono rounded bg-black/30 px-2 py-1 text-sm">{cashappInstructions.note}</p>
+                </div>
               </div>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  className="btn btn-primary w-full"
+                  disabled={checkingPayment}
+                  onClick={checkCashAppPayment}
+                >
+                  {checkingPayment ? "Checking payment…" : "I've sent the payment"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost w-full"
+                  onClick={() => setCashappInstructions(null)}
+                >
+                  Cancel
+                </button>
+              </div>
+              <p className="muted text-xs">
+                After sending, click the button above. Payment verification may take a few minutes.
+              </p>
             </div>
           )}
 
-          <div>
-            <p className="text-sm font-semibold">Payment required</p>
-            <p className="muted mt-1 text-sm">
-              Followers will not start until this order is paid ({money(order.total)}). Crypto confirms automatically after the network payment.
-            </p>
-          </div>
+          {!cashappInstructions && (
+            <>
+              {/* Wallet balance display */}
+              {isAuthenticated && walletBalance !== null && (
+                <div className="rounded-lg border border-[#3ddc97]/20 bg-[#3ddc97]/5 px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-[#9aa3b5]">Your wallet balance</span>
+                    <span className="text-lg font-semibold text-[#3ddc97]">{money(walletBalance)}</span>
+                  </div>
+                </div>
+              )}
 
-          {/* Crypto */}
-          <button
-            type="button"
-            className="btn btn-primary w-full"
-            disabled={cryptoBusy || busy}
-            onClick={payCrypto}
-          >
-            {cryptoBusy ? "Opening invoice…" : "Pay with crypto"}
-          </button>
-          <p className="muted text-xs leading-5">
-            Crypto payments are final and cannot be reversed. After the network confirms, this order starts automatically. Counts can drop after delivery and we are not liable for drops or platform removals.
-          </p>
-
-          {/* Gift card */}
-          <div className="border-t border-white/8 pt-4">
-            <p className="muted mb-2 text-sm">Gift card code</p>
-            <input
-              className="field w-full"
-              value={giftCardCode}
-              onChange={(e) => setGiftCardCode(e.target.value)}
-              placeholder="Optional — covers part or all of the total"
-            />
-          </div>
-
-          {/* Wallet + Add funds */}
-          <div className="flex gap-3 pt-1">
-            {/* Wallet confirm flow */}
-            {!confirmWallet ? (
-              <button
-                type="button"
-                className="btn btn-primary flex-1"
-                disabled={busy || cryptoBusy}
-                onClick={() => {
-                  setError(null);
-                  setConfirmWallet(true);
-                }}
-              >
-                Pay with wallet
-              </button>
-            ) : (
-              <div className="flex flex-1 flex-col gap-2">
-                <p className="text-sm text-[#f0c060]">
-                  This will deduct {money(order.total)} from your wallet
-                  {walletBalance !== null ? ` (balance: ${money(walletBalance)})` : ""}.
-                  This cannot be reversed.
+              <div>
+                <p className="text-sm font-semibold">Payment required</p>
+                <p className="muted mt-1 text-sm">
+                  Followers will not start until this order is paid ({money(order.total)}). Crypto confirms automatically after the network payment.
                 </p>
-                <div className="flex gap-2">
+              </div>
+
+              {/* Crypto */}
+              {paymentConfig?.crypto && (
+                <>
+                  <button
+                    type="button"
+                    className="btn btn-primary w-full"
+                    disabled={cryptoBusy || busy || cashappBusy}
+                    onClick={payCrypto}
+                  >
+                    {cryptoBusy ? "Opening invoice…" : "Pay with crypto"}
+                  </button>
+                  <p className="muted text-xs leading-5">
+                    Crypto payments are final and cannot be reversed. After the network confirms, this order starts automatically. Counts can drop after delivery and we are not liable for drops or platform removals.
+                  </p>
+                </>
+              )}
+
+              {/* CashApp */}
+              {paymentConfig?.cashapp && (
+                <>
+                  <div className="border-t border-white/8 pt-4">
+                    <button
+                      type="button"
+                      className="btn btn-primary w-full bg-[#00d54b] hover:bg-[#00b840] text-black font-semibold"
+                      disabled={cryptoBusy || busy || cashappBusy}
+                      onClick={payCashApp}
+                    >
+                      {cashappBusy ? "Preparing…" : "💵 Pay with CashApp"}
+                    </button>
+                    <p className="muted mt-2 text-xs leading-5">
+                      Send payment via CashApp with the order ID in the note. Payment verified within minutes.
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {/* Gift card */}
+              <div className="border-t border-white/8 pt-4">
+                <p className="muted mb-2 text-sm">Gift card code</p>
+                <input
+                  className="field w-full"
+                  value={giftCardCode}
+                  onChange={(e) => setGiftCardCode(e.target.value)}
+                  placeholder="Optional — covers part or all of the total"
+                />
+              </div>
+
+              {/* Wallet + Add funds */}
+              <div className="flex gap-3 pt-1">
+                {/* Wallet confirm flow */}
+                {!confirmWallet ? (
                   <button
                     type="button"
                     className="btn btn-primary flex-1"
-                    disabled={busy}
-                    onClick={payWithWallet}
+                    disabled={busy || cryptoBusy || cashappBusy}
+                    onClick={() => {
+                      setError(null);
+                      setConfirmWallet(true);
+                    }}
                   >
-                    {busy ? "Processing…" : "Confirm payment"}
+                    Pay with wallet
                   </button>
-                  <button
-                    type="button"
+                ) : (
+                  <div className="flex flex-1 flex-col gap-2">
+                    <p className="text-sm text-[#f0c060]">
+                      This will deduct {money(order.total)} from your wallet
+                      {walletBalance !== null ? ` (balance: ${money(walletBalance)})` : ""}.
+                      This cannot be reversed.
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        className="btn btn-primary flex-1"
+                        disabled={busy}
+                        onClick={payWithWallet}
+                      >
+                        {busy ? "Processing…" : "Confirm payment"}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        disabled={busy}
+                        onClick={() => setConfirmWallet(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    {!walletCoversOrder && walletBalance !== null && (
+                      <p className="text-xs text-[#f07167]">
+                        Insufficient balance. You need {money(order.total - walletBalance)} more.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {!confirmWallet && (
+                  <Link
+                    href="/dashboard/wallet"
                     className="btn btn-ghost"
-                    disabled={busy}
-                    onClick={() => setConfirmWallet(false)}
                   >
-                    Cancel
-                  </button>
-                </div>
-                {!walletCoversOrder && walletBalance !== null && (
-                  <p className="text-xs text-[#f07167]">
-                    Insufficient balance. You need {money(order.total - walletBalance)} more.
-                  </p>
+                    Add wallet funds
+                  </Link>
                 )}
               </div>
-            )}
 
-            {!confirmWallet && (
-              <Link
-                href="/dashboard/wallet"
-                className="btn btn-ghost"
-              >
-                Add wallet funds
-              </Link>
-            )}
-          </div>
-
-          {/* Gift card apply button (shown when code is entered) */}
-          {giftCardCode.trim() && (
-            <button
-              type="button"
-              className="btn btn-ghost w-full"
-              disabled={busy || !giftCardCode.trim()}
-              onClick={applyGiftCard}
-            >
-              {busy ? "Applying…" : "Apply gift card"}
-            </button>
+              {/* Gift card apply button (shown when code is entered) */}
+              {giftCardCode.trim() && (
+                <button
+                  type="button"
+                  className="btn btn-ghost w-full"
+                  disabled={busy || !giftCardCode.trim()}
+                  onClick={applyGiftCard}
+                >
+                  {busy ? "Applying…" : "Apply gift card"}
+                </button>
+              )}
+            </>
           )}
 
           {error && <p className="text-sm text-[#f07167]">{error}</p>}

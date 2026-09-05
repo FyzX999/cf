@@ -29,29 +29,35 @@ export async function POST(req: Request) {
   try {
     const user = await getAuthUser();
     const body = (await req.json()) as {
-      method?: "paypal" | "nowpayments";
+      method?: "paypal" | "nowpayments" | "cashapp";
       kind?: "order" | "wallet";
       publicId?: string;
       amount?: number;
     };
     const method = body.method ?? "nowpayments";
     const kind = body.kind;
-    if (method !== "nowpayments") {
-      return NextResponse.json({ error: "Only crypto checkout is enabled right now" }, { status: 400 });
-    }
+    
     const cfg = paymentConfig();
-    if (!cfg.crypto) {
-      return NextResponse.json({ error: "Crypto payments are not configured yet" }, { status: 400 });
+    
+    // Validate payment method is configured
+    if (method === "paypal" && !cfg.paypal) {
+      return NextResponse.json({ error: "PayPal is not configured" }, { status: 400 });
+    }
+    if (method === "nowpayments" && !cfg.crypto) {
+      return NextResponse.json({ error: "Crypto payments are not configured" }, { status: 400 });
+    }
+    if (method === "cashapp" && !cfg.cashapp) {
+      return NextResponse.json({ error: "CashApp is not configured" }, { status: 400 });
     }
 
-    const minAmount = await getCryptoMinAmount();
+    const minAmount = method === "nowpayments" ? await getCryptoMinAmount() : 0.5;
 
     if (kind === "wallet") {
       if (!user) return NextResponse.json({ error: "Sign in to add wallet funds" }, { status: 401 });
       const amount = Number(body.amount);
       if (!(amount >= minAmount)) {
         return NextResponse.json(
-          { error: `Minimum crypto deposit is $${minAmount.toFixed(2)}` },
+          { error: `Minimum ${method} deposit is $${minAmount.toFixed(2)}` },
           { status: 400 }
         );
       }
@@ -61,7 +67,16 @@ export async function POST(req: Request) {
         amount,
         userId: user.id,
       });
-      return NextResponse.json({ url: result.url });
+      
+      // For CashApp, return instructions instead of redirect URL
+      if (method === "cashapp") {
+        return NextResponse.json({
+          instructions: (result as { instructions?: unknown }).instructions,
+          payment: result.payment,
+        });
+      }
+      
+      return NextResponse.json({ url: (result as { url: string }).url });
     }
 
     if (kind !== "order" || !body.publicId) {
@@ -71,7 +86,7 @@ export async function POST(req: Request) {
     if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
     if (order.paid) return NextResponse.json({ error: "Order is already paid" }, { status: 400 });
 
-    if (order.total < minAmount) {
+    if (method === "nowpayments" && order.total < minAmount) {
       return NextResponse.json(
         { 
           error: `This order total ($${order.total.toFixed(2)}) is below the crypto payment minimum of $${minAmount.toFixed(2)}. Please use wallet or gift card payment.` 
@@ -87,7 +102,16 @@ export async function POST(req: Request) {
       publicId: order.publicId,
       userId: user?.id,
     });
-    return NextResponse.json({ url: result.url });
+    
+    // For CashApp, return instructions instead of redirect URL
+    if (method === "cashapp") {
+      return NextResponse.json({
+        instructions: (result as { instructions?: unknown }).instructions,
+        payment: result.payment,
+      });
+    }
+    
+    return NextResponse.json({ url: (result as { url: string }).url });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Checkout failed" },
