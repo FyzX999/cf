@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { AdminShell } from "@/components/AdminShell";
 import type { SiteSettings } from "@/lib/types";
@@ -42,7 +42,7 @@ export default function AdminSettingsPage() {
   if (!settings) {
     return (
       <AdminShell title="Store settings">
-        <p className="muted text-sm">{error ?? "LoadingÃ¢â‚¬Â¦"}</p>
+        <p className="muted text-sm">{error ?? "Loading..."}</p>
       </AdminShell>
     );
   }
@@ -82,7 +82,7 @@ export default function AdminSettingsPage() {
             value={settings.defaultMarkupMultiplier}
             onChange={(e) => setSettings({ ...settings, defaultMarkupMultiplier: Number(e.target.value) })}
           />
-          <p className="muted mt-1 text-xs">Used for new items and bulk apply. 1.8Ãƒâ€” means 80% profit on cost.</p>
+          <p className="muted mt-1 text-xs">Used for new items and bulk apply. 1.8x means 80% profit on cost.</p>
         </label>
         <label className="text-sm">
           <span className="muted mb-1 block">Reseller discount %</span>
@@ -109,6 +109,17 @@ export default function AdminSettingsPage() {
         <label className="text-sm">
           <span className="muted mb-1 block">Currency</span>
           <input className="field" value={settings.currency} onChange={(e) => setSettings({ ...settings, currency: e.target.value })} />
+        </label>
+        <label className="text-sm">
+          <span className="muted mb-1 block">Base order count</span>
+          <input
+            className="field"
+            type="number"
+            min={0}
+            value={settings.baseOrderCount || 0}
+            onChange={(e) => setSettings({ ...settings, baseOrderCount: Number(e.target.value) })}
+          />
+          <p className="muted mt-1 text-xs">Starting number for order counter display (social proof)</p>
         </label>
         <label className="text-sm">
           <span className="muted mb-1 block">Fast delivery multiplier</span>
@@ -172,7 +183,7 @@ export default function AdminSettingsPage() {
       </div>
 
       <button className="btn btn-primary mt-8" disabled={busy} onClick={save}>
-        {busy ? "SavingÃ¢â‚¬Â¦" : "Save settings"}
+        {busy ? "Saving..." : "Save settings"}
       </button>
     </AdminShell>
   );
