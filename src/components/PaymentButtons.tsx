@@ -38,7 +38,7 @@ export function PaymentButtons({
 
   // Auto-check CashApp payment every 30 seconds
   useEffect(() => {
-    if (!cashappInstructions || autoCheckAttempts >= 12) return; // Stop after 6 minutes
+    if (!cashappInstructions || autoCheckAttempts >= 120) return; // Stop after 1 hour (120 x 30s)
     
     const timer = setTimeout(() => {
       setAutoCheckAttempts(prev => prev + 1);
@@ -172,7 +172,7 @@ export function PaymentButtons({
           </p>
           {autoCheckAttempts > 0 && (
             <p className="text-xs text-blue-400">
-              Checked {autoCheckAttempts} time{autoCheckAttempts > 1 ? 's' : ''}. Will stop after 6 minutes.
+              Checked {autoCheckAttempts} time{autoCheckAttempts > 1 ? 's' : ''}. Will stop after 1 hour.
             </p>
           )}
         </div>

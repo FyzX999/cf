@@ -90,7 +90,7 @@ export default function TrackDetailPage() {
 
   // Auto-check CashApp payment every 30 seconds
   useEffect(() => {
-    if (!cashappInstructions || autoCheckAttempts >= 12) return; // Stop after 6 minutes (12 x 30s)
+    if (!cashappInstructions || autoCheckAttempts >= 120) return; // Stop after 1 hour (120 x 30s)
     
     const timer = setTimeout(() => {
       setAutoCheckAttempts(prev => prev + 1);
@@ -241,6 +241,13 @@ export default function TrackDetailPage() {
           {cashappInstructions && (
             <div className="space-y-4 rounded-lg border border-[#3ddc97]/20 bg-[#3ddc97]/5 p-4">
               <h3 className="font-semibold">Complete CashApp Payment</h3>
+              <div className="flex justify-center py-4">
+                <img 
+                  src={`https://cash.app/qr/${cashappInstructions.cashappTag}?size=288&margin=0&bg=000000&logoColor=ffffff&format=svg`}
+                  alt={`QR code for ${cashappInstructions.cashappTag}`}
+                  className="rounded-lg border border-white/10 p-2 bg-black"
+                />
+              </div>
               <div className="space-y-3 text-sm">
                 <div>
                   <p className="muted mb-1">1. Send exactly:</p>
