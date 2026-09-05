@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkCashAppPayment, getCashAppConfig, parseCashAppReceipt, isReceiptUsed, markReceiptUsed } from "@/lib/cashapp";
+import { checkCashAppPayment, getCashAppConfig, verifyCashAppTransaction, isTransactionUsed, markTransactionUsed } from "@/lib/cashapp";
 import { findPaymentByGatewayId, settlePayment } from "@/lib/payments";
 
 /**
@@ -9,7 +9,7 @@ import { findPaymentByGatewayId, settlePayment } from "@/lib/payments";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { orderId, receiptUrl } = body;
+    const { orderId, transactionId } = body; // Changed from receiptUrl to transactionId
 
     if (!orderId) {
       return NextResponse.json(
@@ -45,35 +45,27 @@ export async function POST(req: NextRequest) {
 
     let cashappPayment = null;
 
-    // If receipt URL provided, verify it
-    if (receiptUrl) {
-      // Check if receipt already used
-      if (isReceiptUsed(receiptUrl)) {
-        return NextResponse.json(
-          { error: "This receipt has already been used" },
-          { status: 400 }
-        );
-      }
-
+    // If transaction ID provided, verify it manually
+    if (transactionId && transactionId.trim()) {
       try {
-        cashappPayment = await parseCashAppReceipt(
-          receiptUrl,
+        cashappPayment = await verifyCashAppTransaction(
+          transactionId,
           orderId,
           payment.amount
         );
 
         if (!cashappPayment) {
           return NextResponse.json(
-            { error: "Receipt does not match order details (check amount and note)" },
+            { error: "Invalid transaction ID" },
             { status: 400 }
           );
         }
 
-        // Mark receipt as used
-        markReceiptUsed(receiptUrl, orderId);
+        // Mark transaction as used
+        markTransactionUsed(transactionId, orderId);
       } catch (error) {
         return NextResponse.json(
-          { error: error instanceof Error ? error.message : "Invalid receipt URL" },
+          { error: error instanceof Error ? error.message : "Invalid transaction ID" },
           { status: 400 }
         );
       }

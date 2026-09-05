@@ -29,7 +29,7 @@ export default function TrackDetailPage() {
   const [checkingPayment, setCheckingPayment] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState<{ crypto: boolean; cashapp: boolean } | null>(null);
   const [autoCheckAttempts, setAutoCheckAttempts] = useState(0);
-  const [receiptUrl, setReceiptUrl] = useState("");
+  const [transactionId, setTransactionId] = useState("");
 
   // Wallet confirmation step
   const [confirmWallet, setConfirmWallet] = useState(false);
@@ -155,7 +155,7 @@ export default function TrackDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           orderId: cashappInstructions.note,
-          receiptUrl: receiptUrl.trim() || undefined
+          transactionId: transactionId.trim() || undefined
         }),
       });
       const json = await res.json();
@@ -289,17 +289,17 @@ export default function TrackDetailPage() {
 
                 <div className="space-y-2">
                   <label className="text-xs text-[#9aa3b5]">
-                    Paste your CashApp receipt URL or transaction number
+                    Or paste your transaction number for instant verification
                   </label>
                   <input
                     type="text"
                     className="field w-full text-sm"
-                    placeholder="https://cash.app/payments/D-RKOXR3K76 or #D-RKOXR3K76"
-                    value={receiptUrl}
-                    onChange={(e) => setReceiptUrl(e.target.value)}
+                    placeholder="#D-RKOXR3K76"
+                    value={transactionId}
+                    onChange={(e) => setTransactionId(e.target.value)}
                   />
                   <p className="text-xs text-[#9aa3b5]">
-                    💡 Tap transaction → Copy transaction number (starts with #D-)
+                    💡 In CashApp: Tap transaction → Copy the transaction number (#D-...)
                   </p>
                 </div>
 

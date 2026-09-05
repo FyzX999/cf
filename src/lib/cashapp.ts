@@ -267,51 +267,67 @@ export function getCashAppConfig(): CashAppConfig | null {
 }
 
 /**
- * Parse CashApp web receipt URL to extract receipt ID and fetch details
- * Since CashApp receipts require auth, we'll just extract the transaction ID
- * and verify it matches the email we already have
- * Example: #D-RKOXR3K76 or https://cash.app/payments/D-RKOXR3K76
+ * Track used transaction IDs to prevent duplicates (in-memory for now)
+ * In production, this should be stored in a database
  */
-export async function parseCashAppReceipt(
-  receiptUrl: string,
+const usedTransactions = new Map<string, { orderId: string; timestamp: number; amount: number }>();
+
+/**
+ * Verify CashApp transaction number (manual verification method)
+ * Since web receipts are auth-protected, we accept the transaction number
+ * and verify it hasn't been used before
+ */
+export async function verifyCashAppTransaction(
+  transactionId: string,
   orderId: string,
   expectedAmount: number
 ): Promise<CashAppPayment | null> {
   try {
-    // Normalize URL - extract transaction ID
-    let transactionId = receiptUrl.trim();
-    
-    // Remove hash if present
-    if (transactionId.startsWith('#')) {
-      transactionId = transactionId.substring(1);
+    // Normalize transaction ID - remove # and whitespace
+    let normalizedId = transactionId.trim().toUpperCase();
+    if (normalizedId.startsWith('#')) {
+      normalizedId = normalizedId.substring(1);
     }
-    
+
     // Extract from URL if full URL provided
-    const urlMatch = transactionId.match(/cash\.app\/payments\/([a-zA-Z0-9_-]+)/i);
+    const urlMatch = normalizedId.match(/CASH\.APP\/PAYMENTS\/([A-Z0-9_-]+)/i);
     if (urlMatch) {
-      transactionId = urlMatch[1];
+      normalizedId = urlMatch[1].toUpperCase();
     }
 
-    console.log(`[CashApp Receipt] Transaction ID: ${transactionId}, Order: ${orderId}`);
+    console.log(`[CashApp Transaction] Verifying: ${normalizedId} for order ${orderId}, amount $${expectedAmount}`);
 
-    // CashApp receipts are auth-protected, so we can't scrape them
-    // Instead, just verify the user provided a valid transaction ID format
-    // and trust they actually sent the payment (they must have the transaction to share it)
-    
-    if (!transactionId || transactionId.length < 5) {
-      throw new Error('Invalid transaction ID format');
+    // Validate format (CashApp transaction IDs are typically like D-RKOXR3K76)
+    if (!normalizedId || normalizedId.length < 5) {
+      throw new Error('Invalid transaction ID format. Please provide the transaction number from your CashApp (e.g., #D-RKOXR3K76)');
     }
 
-    // Return a payment object - this acts as proof they have access to the transaction
+    // Check if this transaction has been used before
+    const existing = usedTransactions.get(normalizedId);
+    if (existing) {
+      console.log(`[CashApp Transaction] ❌ Transaction ${normalizedId} already used for order ${existing.orderId}`);
+      throw new Error('This transaction has already been used for another order');
+    }
+
+    // Mark transaction as used
+    usedTransactions.set(normalizedId, {
+      orderId,
+      timestamp: Date.now(),
+      amount: expectedAmount
+    });
+
+    console.log(`[CashApp Transaction] ✅ Transaction ${normalizedId} verified and marked as used`);
+
+    // Return payment confirmation
     return {
-      amount: expectedAmount, // Trust the amount since they provided transaction proof
+      amount: expectedAmount,
       note: orderId,
       date: new Date(),
-      emailId: transactionId,
-      receiptUrl: `https://cash.app/payments/${transactionId}`
+      emailId: normalizedId,
+      receiptUrl: `https://cash.app/payments/${normalizedId}`
     };
   } catch (error) {
-    console.error('Error parsing CashApp receipt:', error);
+    console.error('[CashApp Transaction] Error:', error);
     throw error;
   }
 }
@@ -322,19 +338,16 @@ export async function parseCashAppReceipt(
 const usedReceipts = new Map<string, { orderId: string; timestamp: number }>();
 
 /**
- * Check if a receipt has already been used
+ * Check if a transaction ID has already been used
  */
-export function isReceiptUsed(receiptUrl: string): boolean {
-  const match = receiptUrl.match(/cash\.app\/payments\/([a-zA-Z0-9_-]+)/i);
-  if (!match) return false;
-  
-  const receiptId = match[1];
-  const used = usedReceipts.get(receiptId);
+export function isTransactionUsed(transactionId: string): boolean {
+  const normalizedId = transactionId.trim().toUpperCase().replace(/^#/, '');
+  const used = usedReceipts.get(normalizedId);
   
   if (used) {
     // Clean up old entries (older than 30 days)
     if (Date.now() - used.timestamp > 30 * 24 * 60 * 60 * 1000) {
-      usedReceipts.delete(receiptId);
+      usedReceipts.delete(normalizedId);
       return false;
     }
     return true;
@@ -344,11 +357,10 @@ export function isReceiptUsed(receiptUrl: string): boolean {
 }
 
 /**
- * Mark a receipt as used
+ * Mark a transaction ID as used
  */
-export function markReceiptUsed(receiptUrl: string, orderId: string): void {
-  const match = receiptUrl.match(/cash\.app\/payments\/([a-zA-Z0-9_-]+)/i);
-  if (match) {
-    usedReceipts.set(match[1], { orderId, timestamp: Date.now() });
-  }
+export function markTransactionUsed(transactionId: string, orderId: string): void {
+  const normalizedId = transactionId.trim().toUpperCase().replace(/^#/, '');
+  usedReceipts.set(normalizedId, { orderId, timestamp: Date.now() });
+  console.log(`[CashApp] Marked transaction ${normalizedId} as used for order ${orderId}`);
 }
