@@ -1,8 +1,20 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
-import { withPermission } from '@/middleware/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { adminCookieName, isValidAdminSession } from '@/lib/admin-auth';
 import { readStore, writeStore } from '@/lib/admin-store';
 import { validateFlashSale, updateFlashSaleStatuses, type FlashSale } from '@/lib/flash-sales';
 import { randomUUID } from 'crypto';
+
+/**
+ * Verify admin authentication
+ */
+async function requireAdmin(req: NextRequest) {
+  const token = req.cookies.get(adminCookieName())?.value;
+  const isValid = await isValidAdminSession(token);
+  if (!isValid) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  return null;
+}
 
 /**
  * GET /api/admin/flash-sales
@@ -10,8 +22,8 @@ import { randomUUID } from 'crypto';
  * Get all flash sales (admin only)
  */
 export async function GET(req: NextRequest) {
-  const permissionError = await withPermission(req, 'commerce.manage');
-  if (permissionError) return permissionError;
+  const authError = await requireAdmin(req);
+  if (authError) return authError;
 
   try {
     const store = await readStore();
@@ -36,8 +48,8 @@ export async function GET(req: NextRequest) {
  * Create a new flash sale (admin only)
  */
 export async function POST(req: NextRequest) {
-  const permissionError = await withPermission(req, 'commerce.manage');
-  if (permissionError) return permissionError;
+  const authError = await requireAdmin(req);
+  if (authError) return authError;
 
   try {
     const body = await req.json();
@@ -73,10 +85,10 @@ export async function POST(req: NextRequest) {
     };
 
     // Store in admin-store
-    const store = await readStore();
-    const flashSales = store.flashSales || [];
-    flashSales.push(flashSale);
-    await writeStore({ ...store, flashSales });
+    await writeStore((store) => ({
+      ...store,
+      flashSales: [...(store.flashSales || []), flashSale]
+    }));
 
     return NextResponse.json({ flashSale }, { status: 201 });
   } catch (error) {

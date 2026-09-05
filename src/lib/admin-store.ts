@@ -10,6 +10,7 @@ import type {
   StoredTicket,
   StoredWallet,
 } from "./types";
+import type { FlashSale } from './flash-sales';
 
 export type AdminStore = {
   settings: SiteSettings;
@@ -20,6 +21,7 @@ export type AdminStore = {
   giftCards: GiftCard[];
   wallets: Record<string, StoredWallet>;
   payments: PaymentRecord[];
+  flashSales?: FlashSale[];
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "admin-store.json");
@@ -63,6 +65,7 @@ function emptyStore(): AdminStore {
     giftCards: [],
     wallets: {},
     payments: [],
+    flashSales: [],
   };
 }
 
@@ -82,6 +85,7 @@ function mergeStore(raw: Partial<AdminStore> | null | undefined): AdminStore {
     giftCards: raw.giftCards ?? [],
     wallets: raw.wallets ?? {},
     payments: raw.payments ?? [],
+    flashSales: raw.flashSales ?? [],
   };
 }
 

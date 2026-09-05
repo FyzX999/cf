@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withPermission } from '@/middleware/auth';
+import { adminCookieName, isValidAdminSession } from '@/lib/admin-auth';
 import { readStore, writeStore } from '@/lib/admin-store';
 import { validateFlashSale, type FlashSale } from '@/lib/flash-sales';
+
+/**
+ * Verify admin authentication
+ */
+async function requireAdmin(req: NextRequest) {
+  const token = req.cookies.get(adminCookieName())?.value;
+  const isValid = await isValidAdminSession(token);
+  if (!isValid) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  return null;
+}
 
 /**
  * PUT /api/admin/flash-sales/[id]
@@ -10,13 +22,13 @@ import { validateFlashSale, type FlashSale } from '@/lib/flash-sales';
  */
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const permissionError = await withPermission(req, 'commerce.manage');
-  if (permissionError) return permissionError;
+  const authError = await requireAdmin(req);
+  if (authError) return authError;
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     
     // Validate partial update
@@ -49,7 +61,7 @@ export async function PUT(
     };
 
     flashSales[index] = updatedFlashSale;
-    await writeStore({ ...store, flashSales });
+    await writeStore((store) => ({ ...store, flashSales }));
 
     return NextResponse.json({ flashSale: updatedFlashSale });
   } catch (error) {
@@ -68,13 +80,13 @@ export async function PUT(
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const permissionError = await withPermission(req, 'commerce.manage');
-  if (permissionError) return permissionError;
+  const authError = await requireAdmin(req);
+  if (authError) return authError;
 
   try {
-    const { id } = params;
+    const { id } = await params;
     
     // Load store and remove flash sale
     const store = await readStore();
@@ -88,7 +100,7 @@ export async function DELETE(
       );
     }
 
-    await writeStore({ ...store, flashSales: filteredFlashSales });
+    await writeStore((store) => ({ ...store, flashSales: filteredFlashSales }));
 
     return NextResponse.json({ success: true });
   } catch (error) {

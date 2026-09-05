@@ -1,0 +1,119 @@
+﻿
+> [data-theme="light"] {
+    color-scheme: light;
+  }
+  
+> [data-theme="light"] body {
+    background:
+      radial-gradient(1200px 600px at 12% -10%, color-mix(in srgb, 
+var(--color-primary) 8%, transparent), transparent 55%),
+      radial-gradient(900px 500px at 90% 0%, color-mix(in srgb, 
+var(--color-secondary) 6%, transparent), transparent 50%),
+      var(--bg);
+    background-attachment: fixed;
+  }
+  
+> [data-theme="light"] .glass {
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    backdrop-filter: blur(20px) saturate(120%);
+    -webkit-backdrop-filter: blur(20px) saturate(120%);
+  }
+  
+> [data-theme="light"] .glass:hover,
+> [data-theme="light"] a.glass:hover,
+> [data-theme="light"] .glass.lift:hover {
+    border-color: rgba(15, 23, 42, 0.12);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+  }
+  
+> [data-theme="light"] .btn-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, 
+var(--color-primary-dark) 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  }
+  
+> [data-theme="light"] .btn-primary:hover {
+    box-shadow: 0 8px 24px rgba(79, 70, 229, 0.35);
+  }
+  
+> [data-theme="light"] .btn-ghost {
+    background: rgba(255, 255, 255, 0.8);
+    color: var(--color-text);
+    border: 1px solid rgba(15, 23, 42, 0.1);
+  }
+  
+> [data-theme="light"] .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(15, 23, 42, 0.15);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  }
+  
+> [data-theme="light"] .field {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    color: var(--color-text);
+  }
+  
+> [data-theme="light"] .field:focus {
+    border-color: var(--color-primary);
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  }
+  
+> [data-theme="light"] .field:hover:not(:focus) {
+    border-color: rgba(15, 23, 42, 0.18);
+  }
+  
+> [data-theme="light"] select.field {
+    background-color: rgba(255, 255, 255, 0.95);
+    color: var(--color-text);
+  }
+  
+> [data-theme="light"] select.field option,
+> [data-theme="light"] select.field optgroup {
+    background-color: #ffffff;
+    color: #1e293b;
+  }
+  
+> [data-theme="light"] .nav-link::after {
+    background: var(--color-primary);
+    box-shadow: 0 0 12px rgba(79, 70, 229, 0.4);
+  }
+  
+> [data-theme="light"] .faq-item[open] {
+    border-color: rgba(79, 70, 229, 0.25);
+    box-shadow: 0 0 16px rgba(79, 70, 229, 0.15);
+  }
+  
+> [data-theme="light"] .table-wrapper::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.05);
+  }
+  
+> [data-theme="light"] .table-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.2);
+  }
+  
+> [data-theme="light"] .table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(15, 23, 42, 0.3);
+  }
+  
+> [data-theme="light"] .glass-depth-1 {
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  }
+  
+> [data-theme="light"] .glass-depth-2 {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  }
+  
+> [data-theme="light"] .glass-depth-3 {
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  }
+  
+> [data-theme="light"] .glass-3d:hover {
+    box-shadow: 0 16px 48px rgba(15, 23, 42, 0.15);
+  }
+
+
