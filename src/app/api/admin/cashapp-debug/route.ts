@@ -1,21 +1,31 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import Imap from 'imap';
 import { simpleParser } from 'mailparser';
 import * as cheerio from 'cheerio';
 import { getCashAppConfig } from "@/lib/cashapp";
-import { requireAuth } from "@/lib/auth";
+import { adminCookieName, isValidAdminSession } from '@/lib/admin-auth';
+
+/**
+ * Verify admin authentication
+ */
+async function requireAdmin(req: NextRequest) {
+  const token = req.cookies.get(adminCookieName())?.value;
+  const isValid = await isValidAdminSession(token);
+  if (!isValid) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  return null;
+}
 
 /**
  * GET /api/admin/cashapp-debug
  * Debug CashApp email fetching - shows recent emails and parsing results
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const authError = await requireAdmin(req);
+  if (authError) return authError;
+
   try {
-    // Require admin auth
-    const auth = await requireAuth();
-    if (!auth.ok) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const config = getCashAppConfig();
     if (!config) {
