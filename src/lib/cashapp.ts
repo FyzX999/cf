@@ -139,13 +139,22 @@ export async function checkCashAppPayment(
   console.log(`[CashApp] Checking payment for order ${orderId}, amount $${expectedAmount}`);
   
   return new Promise((resolve, reject) => {
+    // Add 60 second timeout
+    const timeout = setTimeout(() => {
+      console.log('[CashApp] ⏱️ Timeout after 60 seconds');
+      imap.end();
+      resolve(null);
+    }, 60000);
+
     const imap = new Imap({
       user: config.email,
       password: config.password,
       host: config.imapHost,
       port: config.imapPort,
       tls: true,
-      tlsOptions: { rejectUnauthorized: false }
+      tlsOptions: { rejectUnauthorized: false },
+      connTimeout: 30000, // 30 second connection timeout
+      authTimeout: 30000  // 30 second auth timeout
     });
 
     let found = false;
@@ -159,11 +168,11 @@ export async function checkCashAppPayment(
           return;
         }
 
-        // Search for emails from cash@square.com (recent first - last 24 hours)
+        // Search for emails from cash@square.com (recent first - last 7 days for better coverage)
         imap.search(
           [
             ['FROM', 'cash@square.com'],
-            ['SINCE', new Date(Date.now() - 24 * 60 * 60 * 1000)] // Last 24 hours
+            ['SINCE', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)] // Last 7 days
           ],
           (err: Error | null, results: number[]) => {
             if (err) {
@@ -200,6 +209,7 @@ export async function checkCashAppPayment(
                     Math.abs(paymentData.amount - expectedAmount) < 0.01
                   ) {
                     found = true;
+                    clearTimeout(timeout);
                     console.log(`[CashApp] ✅ Payment matched for order ${orderId}!`);
                     resolve({
                       amount: paymentData.amount,
@@ -214,11 +224,13 @@ export async function checkCashAppPayment(
             });
 
             fetch.once('error', (err: Error) => {
+              clearTimeout(timeout);
               reject(err);
             });
 
             fetch.once('end', () => {
               if (!found) {
+                clearTimeout(timeout);
                 console.log(`[CashApp] Checked ${emailCount} emails, no match found`);
                 imap.end();
                 resolve(null);
@@ -230,10 +242,13 @@ export async function checkCashAppPayment(
     });
 
     imap.once('error', (err: Error) => {
+      clearTimeout(timeout);
+      console.error('[CashApp] IMAP error:', err);
       reject(err);
     });
 
     imap.once('end', () => {
+      clearTimeout(timeout);
       if (!found) {
         resolve(null);
       }
