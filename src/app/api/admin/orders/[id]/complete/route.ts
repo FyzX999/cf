@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminCookieName, isValidAdminSession } from '@/lib/admin-auth';
 import { findPaymentByGatewayId, settlePayment } from "@/lib/payments";
 
-/**
- * Verify admin authentication
- */
 async function requireAdmin(req: NextRequest) {
   const token = req.cookies.get(adminCookieName())?.value;
   const isValid = await isValidAdminSession(token);
@@ -14,21 +11,17 @@ async function requireAdmin(req: NextRequest) {
   return null;
 }
 
-/**
- * POST /api/admin/orders/[id]/complete
- * Manually mark a CashApp payment as completed (admin override)
- */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   const authError = await requireAdmin(req);
   if (authError) return authError;
 
   try {
-    const orderId = params.id.toUpperCase();
+    const { id } = await params;
+    const orderId = id.toUpperCase();
     
-    // Find the pending payment
     const payment = await findPaymentByGatewayId(orderId);
     if (!payment) {
       return NextResponse.json(
@@ -44,7 +37,6 @@ export async function POST(
       });
     }
 
-    // Settle the payment
     const settled = await settlePayment(payment);
 
     return NextResponse.json({
