@@ -1,4 +1,4 @@
-import { FlashSaleBanner } from "@/components/marketing";
+import { FlashSaleBanner, LiveOrderCounter } from "@/components/marketing";
 import { FeatureGrid } from "@/components/FeatureGrid";
 import { OrderWidget } from "@/components/OrderWidget";
 import { Reveal } from "@/components/Reveal";
@@ -30,6 +30,9 @@ export default async function HomePage() {
           <p className="muted mt-4 max-w-lg text-base leading-7">
             Purchase social-media marketing services across multiple platforms from a single dashboard. Instant pricing, live tracking, wallet, and reseller API.
           </p>
+          
+          <LiveOrderCounter className="mt-4" />
+          
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/services" className="btn btn-primary">
               Browse Services
