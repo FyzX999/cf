@@ -97,40 +97,58 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                     if (err) return;
 
                     const html = parsed.html || '';
+                    const plainText = parsed.text || '';
                     const $ = cheerio.load(html);
 
-                    // Extract amount
+                    // Extract amount - improved patterns
                     let amount: number | null = null;
-                    const amountSelectors = ['td', 'div', 'span'];
-                    for (const selector of amountSelectors) {
-                      $(selector).each((_, elem) => {
-                        const text = $(elem).text().trim();
-                        const match = text.match(/\+?\$(\d+\.\d+)/);
-                        if (match && !amount) {
-                          amount = parseFloat(match[1]);
-                          return false;
-                        }
-                      });
-                      if (amount) break;
-                    }
-
-                    // Extract note
-                    let note: string | null = null;
-                    $('.profile-description, .text-subtle').each((_, elem) => {
+                    const amountPatterns = [
+                      /\+\$(\d+\.?\d*)/,
+                      /\$(\d+\.\d{2})/,
+                      /(\d+\.\d{2})\s*USD/i,
+                    ];
+                    
+                    $('*').each((_, elem) => {
+                      if (amount) return false;
                       const text = $(elem).text().trim();
-                      const match = text.match(/^For\s+(.+)$/i);
+                      for (const pattern of amountPatterns) {
+                        const match = text.match(pattern);
+                        if (match) {
+                          const parsed = parseFloat(match[1]);
+                          if (parsed > 0 && parsed < 10000) {
+                            amount = parsed;
+                            return false;
+                          }
+                        }
+                      }
+                    });
+
+                    // Extract note - improved patterns
+                    let note: string | null = null;
+                    $('.profile-description, .text-subtle, [class*="note"], [class*="memo"]').each((_, elem) => {
+                      if (note) return false;
+                      const text = $(elem).text().trim();
+                      const match = text.match(/For\s+([A-Z0-9]+)/i);
                       if (match) {
                         note = match[1].trim();
                         return false;
                       }
                     });
 
-                    // Fallback
+                    // Fallback: search entire text
                     if (!note) {
-                      const allText = $.text();
-                      const match = allText.match(/For\s+([A-Z0-9]+)/i);
-                      if (match) {
-                        note = match[1].trim();
+                      const allText = $.text() + ' ' + plainText;
+                      const patterns = [
+                        /For\s+([A-Z]{2}\d{6})/i,
+                        /For:\s*([A-Z]{2}\d{6})/i,
+                        /Note:\s*([A-Z]{2}\d{6})/i,
+                      ];
+                      for (const pattern of patterns) {
+                        const match = allText.match(pattern);
+                        if (match) {
+                          note = match[1].trim();
+                          break;
+                        }
                       }
                     }
 
@@ -143,8 +161,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                         amount,
                         note
                       },
-                      // First 500 chars of text for debugging
-                      textPreview: parsed.text?.substring(0, 500)
+                      // First 800 chars of text for debugging
+                      textPreview: plainText?.substring(0, 800),
+                      htmlPreview: html?.substring(0, 800)
                     });
                   });
                 });

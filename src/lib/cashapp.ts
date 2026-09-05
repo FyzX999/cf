@@ -21,49 +21,101 @@ export interface CashAppConfig {
 /**
  * Parse CashApp payment email HTML to extract amount and note
  */
-function parseCashAppEmail(html: string): { amount: number; note: string } | null {
+function parseCashAppEmail(html: string, plainText: string = ''): { amount: number; note: string } | null {
   try {
     const $ = cheerio.load(html);
     
-    // Find amount - looking for +$XX.XX pattern
+    // Find amount - looking for +$XX.XX or $XX.XX pattern
     let amount: number | null = null;
     
-    // Try multiple selectors for amount
-    const amountSelectors = ['td', 'div', 'span'];
-    for (const selector of amountSelectors) {
-      $(selector).each((_, elem) => {
-        const text = $(elem).text().trim();
-        const match = text.match(/\+?\$(\d+\.\d+)/);
-        if (match && !amount) {
-          amount = parseFloat(match[1]);
-          return false; // break
+    // Method 1: Try to find amount in specific elements
+    const amountPatterns = [
+      /\+\$(\d+\.?\d*)/,  // +$10.00
+      /\$(\d+\.\d{2})/,   // $10.00
+      /(\d+\.\d{2})\s*USD/i, // 10.00 USD
+    ];
+    
+    $('*').each((_, elem) => {
+      if (amount) return false;
+      const text = $(elem).text().trim();
+      
+      for (const pattern of amountPatterns) {
+        const match = text.match(pattern);
+        if (match) {
+          const parsed = parseFloat(match[1]);
+          if (parsed > 0 && parsed < 10000) { // reasonable bounds
+            amount = parsed;
+            return false;
+          }
         }
-      });
-      if (amount) break;
+      }
+    });
+
+    // Fallback: search plain text
+    if (!amount && plainText) {
+      for (const pattern of amountPatterns) {
+        const match = plainText.match(pattern);
+        if (match) {
+          const parsed = parseFloat(match[1]);
+          if (parsed > 0 && parsed < 10000) {
+            amount = parsed;
+            break;
+          }
+        }
+      }
     }
 
-    // Find note - looking for "For XXXXX" pattern in profile-description
+    // Find note - looking for "For XXXXX" pattern
     let note: string | null = null;
     
-    // Look for the specific class used by CashApp
-    $('.profile-description, .text-subtle').each((_, elem) => {
+    // Method 1: Look for specific classes
+    $('.profile-description, .text-subtle, [class*="note"], [class*="memo"], [class*="message"]').each((_, elem) => {
+      if (note) return false;
       const text = $(elem).text().trim();
-      // Match "For [ORDER_ID]" pattern
-      const match = text.match(/^For\s+(.+)$/i);
+      const match = text.match(/For\s+([A-Z0-9]+)/i);
       if (match) {
         note = match[1].trim();
-        return false; // break
+        return false;
       }
     });
     
-    // Fallback: search all text for "For [alphanumeric]" pattern
+    // Method 2: Search all HTML for "For [alphanumeric]"
     if (!note) {
       const allText = $.text();
-      const match = allText.match(/For\s+([A-Z0-9]+)/i);
-      if (match) {
-        note = match[1].trim();
+      const patterns = [
+        /For\s+([A-Z]{2}\d{6})/i,  // For CF123456 format
+        /For:\s*([A-Z]{2}\d{6})/i, // For: CF123456
+        /Note:\s*([A-Z]{2}\d{6})/i, // Note: CF123456
+        /Memo:\s*([A-Z]{2}\d{6})/i, // Memo: CF123456
+      ];
+      
+      for (const pattern of patterns) {
+        const match = allText.match(pattern);
+        if (match) {
+          note = match[1].trim();
+          break;
+        }
       }
     }
+
+    // Method 3: Try plain text
+    if (!note && plainText) {
+      const patterns = [
+        /For\s+([A-Z]{2}\d{6})/i,
+        /For:\s*([A-Z]{2}\d{6})/i,
+        /Note:\s*([A-Z]{2}\d{6})/i,
+      ];
+      
+      for (const pattern of patterns) {
+        const match = plainText.match(pattern);
+        if (match) {
+          note = match[1].trim();
+          break;
+        }
+      }
+    }
+
+    console.log(`[CashApp Parser] Amount: ${amount}, Note: ${note}`);
 
     if (amount !== null && note) {
       return { amount, note };
@@ -84,6 +136,8 @@ export async function checkCashAppPayment(
   expectedAmount: number,
   config: CashAppConfig
 ): Promise<CashAppPayment | null> {
+  console.log(`[CashApp] Checking payment for order ${orderId}, amount $${expectedAmount}`);
+  
   return new Promise((resolve, reject) => {
     const imap = new Imap({
       user: config.email,
@@ -95,19 +149,21 @@ export async function checkCashAppPayment(
     });
 
     let found = false;
+    let emailCount = 0;
 
     imap.once('ready', () => {
+      console.log('[CashApp] IMAP connection ready');
       imap.openBox('INBOX', true, (err: Error | null) => {
         if (err) {
           reject(err);
           return;
         }
 
-        // Search for emails from cash@square.com with the order ID in subject or body
+        // Search for emails from cash@square.com (recent first - last 24 hours)
         imap.search(
           [
             ['FROM', 'cash@square.com'],
-            ['SINCE', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)] // Last 30 days
+            ['SINCE', new Date(Date.now() - 24 * 60 * 60 * 1000)] // Last 24 hours
           ],
           (err: Error | null, results: number[]) => {
             if (err) {
@@ -116,11 +172,13 @@ export async function checkCashAppPayment(
             }
 
             if (!results || results.length === 0) {
+              console.log('[CashApp] No emails found from cash@square.com in last 24 hours');
               imap.end();
               resolve(null);
               return;
             }
 
+            console.log(`[CashApp] Found ${results.length} emails from cash@square.com`);
             const fetch = imap.fetch(results, { bodies: '' });
 
             fetch.on('message', (msg: Imap.ImapMessage) => {
@@ -128,15 +186,21 @@ export async function checkCashAppPayment(
                 simpleParser(stream as any, async (err: Error | undefined, parsed: any) => {
                   if (err || found) return;
 
+                  emailCount++;
                   const html = parsed.html || '';
-                  const paymentData = parseCashAppEmail(html);
+                  const plainText = parsed.text || '';
+                  const paymentData = parseCashAppEmail(html, plainText);
+
+                  console.log(`[CashApp] Email ${emailCount}: Looking for order ${orderId}, $${expectedAmount}`);
+                  console.log(`[CashApp] Email ${emailCount}: Found note=${paymentData?.note}, amount=$${paymentData?.amount}`);
 
                   if (
                     paymentData &&
-                    paymentData.note === orderId &&
+                    paymentData.note.toUpperCase() === orderId.toUpperCase() &&
                     Math.abs(paymentData.amount - expectedAmount) < 0.01
                   ) {
                     found = true;
+                    console.log(`[CashApp] ✅ Payment matched for order ${orderId}!`);
                     resolve({
                       amount: paymentData.amount,
                       note: paymentData.note,
@@ -155,6 +219,7 @@ export async function checkCashAppPayment(
 
             fetch.once('end', () => {
               if (!found) {
+                console.log(`[CashApp] Checked ${emailCount} emails, no match found`);
                 imap.end();
                 resolve(null);
               }
