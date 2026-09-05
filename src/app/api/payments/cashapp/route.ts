@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkCashAppPayment, getCashAppConfig, verifyCashAppTransaction, isTransactionUsed, markTransactionUsed } from "@/lib/cashapp";
+import { checkCashAppPayment, getCashAppConfig } from "@/lib/cashapp";
 import { findPaymentByGatewayId, settlePayment } from "@/lib/payments";
 
 /**
@@ -9,7 +9,7 @@ import { findPaymentByGatewayId, settlePayment } from "@/lib/payments";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { orderId, transactionId } = body; // Changed from receiptUrl to transactionId
+    const { orderId } = body;
 
     if (!orderId) {
       return NextResponse.json(
@@ -43,46 +43,18 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    let cashappPayment = null;
+    // Check email for payment (ONLY method - no manual verification)
+    const cashappPayment = await checkCashAppPayment(
+      orderId,
+      payment.amount,
+      config
+    );
 
-    // If transaction ID provided, verify it manually
-    if (transactionId && transactionId.trim()) {
-      try {
-        cashappPayment = await verifyCashAppTransaction(
-          transactionId,
-          orderId,
-          payment.amount
-        );
-
-        if (!cashappPayment) {
-          return NextResponse.json(
-            { error: "Invalid transaction ID" },
-            { status: 400 }
-          );
-        }
-
-        // Mark transaction as used
-        markTransactionUsed(transactionId, orderId);
-      } catch (error) {
-        return NextResponse.json(
-          { error: error instanceof Error ? error.message : "Invalid transaction ID" },
-          { status: 400 }
-        );
-      }
-    } else {
-      // Check email for payment (original method)
-      cashappPayment = await checkCashAppPayment(
-        orderId,
-        payment.amount,
-        config
-      );
-
-      if (!cashappPayment) {
-        return NextResponse.json({
-          status: "pending",
-          message: "Payment not yet received",
-        });
-      }
+    if (!cashappPayment) {
+      return NextResponse.json({
+        status: "pending",
+        message: "Payment not yet received. Please wait for email confirmation (usually 5-7 minutes after payment).",
+      });
     }
 
     // Settle the payment

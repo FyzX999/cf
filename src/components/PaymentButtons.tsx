@@ -27,7 +27,6 @@ export function PaymentButtons({
   const [checkingPayment, setCheckingPayment] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState<{ crypto: boolean; cashapp: boolean } | null>(null);
   const [autoCheckAttempts, setAutoCheckAttempts] = useState(0);
-  const [transactionId, setTransactionId] = useState("");
 
   useEffect(() => {
     // Fetch available payment methods
@@ -88,8 +87,7 @@ export function PaymentButtons({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          orderId: cashappInstructions.note,
-          transactionId: transactionId.trim() || undefined
+          orderId: cashappInstructions.note
         }),
       });
       const json = await res.json();
@@ -103,7 +101,7 @@ export function PaymentButtons({
           window.location.href = "/dashboard/wallet?paid=cashapp";
         }
       } else {
-        setError("Payment not yet received. Please wait a few moments after sending.");
+        setError(json.message || "Payment not yet received. Please wait a few moments after sending.");
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to check payment");
@@ -157,41 +155,14 @@ export function PaymentButtons({
             disabled={checkingPayment}
             onClick={checkCashAppPayment}
           >
-            {checkingPayment ? "Checking payment…" : "I've sent the payment"}
+            {checkingPayment ? "Checking payment…" : "Check payment status"}
           </button>
-          
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10"></div>
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="bg-[#0a0a0f] px-2 text-gray-500">Payment taking too long?</span>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs text-gray-400">
-              Or paste your transaction number for instant verification
-            </label>
-            <input
-              type="text"
-              className="field w-full text-sm"
-              placeholder="#D-RKOXR3K76"
-              value={transactionId}
-              onChange={(e) => setTransactionId(e.target.value)}
-            />
-            <p className="text-xs text-gray-500">
-              💡 In CashApp: Tap transaction → Copy the transaction number (#D-...)
-            </p>
-          </div>
-
           <button
             type="button"
             className="btn btn-ghost w-full"
             onClick={() => {
               setCashappInstructions(null);
               setAutoCheckAttempts(0);
-              setTransactionId("");
             }}
           >
             Cancel
@@ -199,11 +170,11 @@ export function PaymentButtons({
         </div>
         <div className="space-y-1">
           <p className="muted text-xs">
-            ⏱️ Auto-checking every 30 seconds. Click "I've sent the payment" to check manually.
+            ⏱️ Auto-checking every 30 seconds. Payments usually appear within 5-7 minutes.
           </p>
           {autoCheckAttempts > 0 && (
             <p className="text-xs text-blue-400">
-              Checked {autoCheckAttempts} time{autoCheckAttempts > 1 ? 's' : ''}. Will stop after 1 hour.
+              Checked {autoCheckAttempts} time{autoCheckAttempts > 1 ? 's' : ''}. Will continue checking for 1 hour.
             </p>
           )}
         </div>
