@@ -1,4 +1,4 @@
-import { services as seedServices } from "./catalog";
+﻿import { services as seedServices } from "./catalog";
 import { readStore } from "./admin-store";
 import type { Service, ServiceOverride, SiteSettings } from "./types";
 
@@ -61,4 +61,21 @@ export async function searchLiveServices(query: string) {
 
 export function profitPerThousand(service: Service) {
   return Number((service.ratePerThousand - service.costPerThousand).toFixed(4));
+}
+
+
+/**
+ * Remove sensitive data from services before exposing to public
+ * SECURITY: Never expose cost, provider IDs, or markup to clients
+ */
+export function sanitizeService<T extends Service>(service: T): Omit<T, 'costPerThousand' | 'providerServiceId' | 'markupMultiplier' | 'providerName' | 'providerRate'> {
+  const { costPerThousand, providerServiceId, markupMultiplier, providerName, providerRate, ...safe } = service;
+  return safe;
+}
+
+/**
+ * Sanitize array of services
+ */
+export function sanitizeServices(services: Service[]): Array<Omit<Service, 'costPerThousand' | 'providerServiceId' | 'markupMultiplier' | 'providerName' | 'providerRate'>> {
+  return services.map(sanitizeService);
 }

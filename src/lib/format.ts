@@ -1,4 +1,5 @@
 ﻿import type { OrderStatus } from "./types";
+import { randomInt } from "crypto";
 
 export function money(amount: number) {
   return new Intl.NumberFormat("en-US", {
@@ -28,8 +29,9 @@ export function statusLabel(status: OrderStatus) {
 }
 
 export function generatePublicId() {
-  // Generate 6-digit numeric ID (100000-999999)
-  const n = Math.floor(100000 + Math.random() * 900000);
+  // SECURITY: Use cryptographically secure random number generation
+  // This prevents attackers from predicting order IDs
+  const n = randomInt(100000, 1000000); // 100000-999999
   const id = `CF${n}`;
   
   // Validate it's actually numeric
@@ -42,7 +44,8 @@ export function generatePublicId() {
 }
 
 export function generateTxnId() {
-  return `TXN-${Math.floor(10000000 + Math.random() * 90000000)}`;
+  // SECURITY: Use cryptographically secure random for transaction IDs
+  return `TXN-${randomInt(10000000, 100000000)}`;
 }
 
 export function clsx(...parts: Array<string | false | null | undefined>) {
