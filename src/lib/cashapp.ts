@@ -5,6 +5,7 @@ import * as cheerio from 'cheerio';
 export interface CashAppPayment {
   amount: number;
   note: string;
+  recipient: string;
   date: Date;
   emailId: string;
   receiptUrl?: string;
@@ -19,9 +20,9 @@ export interface CashAppConfig {
 }
 
 /**
- * Parse CashApp payment email HTML to extract amount and note
+ * Parse CashApp payment email HTML to extract amount, note, and recipient
  */
-function parseCashAppEmail(html: string, plainText: string = ''): { amount: number; note: string } | null {
+function parseCashAppEmail(html: string, plainText: string = ''): { amount: number; note: string; recipient: string } | null {
   try {
     const $ = cheerio.load(html);
     
@@ -62,6 +63,24 @@ function parseCashAppEmail(html: string, plainText: string = ''): { amount: numb
             break;
           }
         }
+      }
+    }
+
+    // Find recipient cashtag - looking for $username pattern
+    let recipient: string | null = null;
+    
+    // Look for "to $username" or "paid $username" patterns
+    const allText = $.text() + ' ' + plainText;
+    const recipientPatterns = [
+      /(?:to|paid)\s+(\$[a-zA-Z0-9_]+)/i,  // "to $followermarket"
+      /(\$[a-zA-Z0-9_]+)\s+(?:received|got)/i, // "$followermarket received"
+    ];
+    
+    for (const pattern of recipientPatterns) {
+      const match = allText.match(pattern);
+      if (match) {
+        recipient = match[1].toLowerCase(); // normalize to lowercase
+        break;
       }
     }
 
@@ -117,10 +136,10 @@ function parseCashAppEmail(html: string, plainText: string = ''): { amount: numb
       }
     }
 
-    console.log(`[CashApp Parser] Amount: ${amount}, Note: ${note}`);
+    console.log(`[CashApp Parser] Amount: ${amount}, Note: ${note}, Recipient: ${recipient}`);
 
-    if (amount !== null && note) {
-      return { amount, note };
+    if (amount !== null && note && recipient) {
+      return { amount, note, recipient };
     }
 
     return null;
@@ -139,6 +158,7 @@ export async function checkCashAppPayment(
   config: CashAppConfig
 ): Promise<CashAppPayment | null> {
   console.log(`[CashApp] Checking payment for order ${orderId}, amount $${expectedAmount}`);
+  console.log(`[CashApp] Expected recipient: ${config.cashappTag}`);
   
   return new Promise((resolve, reject) => {
     // Add 60 second timeout
@@ -161,6 +181,7 @@ export async function checkCashAppPayment(
 
     let found = false;
     let emailCount = 0;
+    const expectedRecipient = config.cashappTag.toLowerCase();
 
     imap.once('ready', () => {
       console.log('[CashApp] IMAP connection ready');
@@ -183,7 +204,7 @@ export async function checkCashAppPayment(
             }
 
             if (!results || results.length === 0) {
-              console.log('[CashApp] No emails found from cash@square.com in last 24 hours');
+              console.log('[CashApp] No emails found from cash@square.com in last 7 days');
               imap.end();
               resolve(null);
               return;
@@ -202,24 +223,35 @@ export async function checkCashAppPayment(
                   const plainText = parsed.text || '';
                   const paymentData = parseCashAppEmail(html, plainText);
 
-                  console.log(`[CashApp] Email ${emailCount}: Looking for order ${orderId}, $${expectedAmount}`);
-                  console.log(`[CashApp] Email ${emailCount}: Found note=${paymentData?.note}, amount=$${paymentData?.amount}`);
+                  console.log(`[CashApp] Email ${emailCount}: Looking for order ${orderId}, $${expectedAmount}, to ${expectedRecipient}`);
+                  console.log(`[CashApp] Email ${emailCount}: Found note=${paymentData?.note}, amount=$${paymentData?.amount}, recipient=${paymentData?.recipient}`);
 
-                  if (
-                    paymentData &&
-                    paymentData.note.toUpperCase() === orderId.toUpperCase() &&
-                    Math.abs(paymentData.amount - expectedAmount) < 0.01
-                  ) {
-                    found = true;
-                    clearTimeout(timeout);
-                    console.log(`[CashApp] ✅ Payment matched for order ${orderId}!`);
-                    resolve({
-                      amount: paymentData.amount,
-                      note: paymentData.note,
-                      date: parsed.date || new Date(),
-                      emailId: parsed.messageId || ''
-                    });
-                    imap.end();
+                  if (paymentData) {
+                    // Check if recipient matches
+                    if (paymentData.recipient.toLowerCase() !== expectedRecipient) {
+                      console.log(`[CashApp] ❌ Recipient mismatch: expected ${expectedRecipient}, got ${paymentData.recipient}`);
+                      return;
+                    }
+
+                    // Check if note and amount match
+                    if (
+                      paymentData.note.toUpperCase() === orderId.toUpperCase() &&
+                      Math.abs(paymentData.amount - expectedAmount) < 0.01
+                    ) {
+                      found = true;
+                      clearTimeout(timeout);
+                      console.log(`[CashApp] ✅ Payment matched for order ${orderId}!`);
+                      resolve({
+                        amount: paymentData.amount,
+                        note: paymentData.note,
+                        recipient: paymentData.recipient,
+                        date: parsed.date || new Date(),
+                        emailId: parsed.messageId || ''
+                      });
+                      imap.end();
+                    } else {
+                      console.log(`[CashApp] ❌ Note or amount mismatch`);
+                    }
                   }
                 });
               });
