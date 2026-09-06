@@ -454,6 +454,13 @@ export async function createCashAppInvoice(input: {
   publicId?: string;
   userId?: string;
 }) {
+  console.log('[CashApp Invoice] ========== START ==========');
+  console.log('[CashApp Invoice] Full input:', JSON.stringify(input, null, 2));
+  console.log('[CashApp Invoice] publicId received:', input.publicId);
+  console.log('[CashApp Invoice] userId received:', input.userId);
+  console.log('[CashApp Invoice] kind:', input.kind);
+  console.log('[CashApp Invoice] amount:', input.amount);
+  
   const cashappTag = process.env.CASHAPP_TAG;
   if (!cashappTag) throw new Error("CashApp is not configured. Set CASHAPP_TAG.");
   const amount = Number(input.amount.toFixed(2));
