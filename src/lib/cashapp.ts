@@ -1,4 +1,4 @@
-import Imap from 'imap';
+﻿import Imap from 'imap';
 import { simpleParser } from 'mailparser';
 import * as cheerio from 'cheerio';
 
@@ -83,10 +83,11 @@ function parseCashAppEmail(html: string, plainText: string = ''): { amount: numb
     if (!note) {
       const allText = $.text();
       const patterns = [
-        /For\s+([A-Z]{2}\d{6})/i,  // For CF123456 format
-        /For:\s*([A-Z]{2}\d{6})/i, // For: CF123456
-        /Note:\s*([A-Z]{2}\d{6})/i, // Note: CF123456
-        /Memo:\s*([A-Z]{2}\d{6})/i, // Memo: CF123456
+        /For\s+([A-Z]{2}\d{6,})/i,  // For CF123456 or CF1234567 (6+ digits)
+        /For:\s*([A-Z]{2}\d{6,})/i, // For: CF123456
+        /Note:\s*([A-Z]{2}\d{6,})/i, // Note: CF123456
+        /Memo:\s*([A-Z]{2}\d{6,})/i, // Memo: CF123456
+        /For\s+([A-Z0-9]{6,})/i,    // Generic alphanumeric 6+ chars
       ];
       
       for (const pattern of patterns) {
@@ -101,9 +102,10 @@ function parseCashAppEmail(html: string, plainText: string = ''): { amount: numb
     // Method 3: Try plain text
     if (!note && plainText) {
       const patterns = [
-        /For\s+([A-Z]{2}\d{6})/i,
-        /For:\s*([A-Z]{2}\d{6})/i,
-        /Note:\s*([A-Z]{2}\d{6})/i,
+        /For\s+([A-Z]{2}\d{6,})/i,
+        /For:\s*([A-Z]{2}\d{6,})/i,
+        /Note:\s*([A-Z]{2}\d{6,})/i,
+        /For\s+([A-Z0-9]{6,})/i,
       ];
       
       for (const pattern of patterns) {
