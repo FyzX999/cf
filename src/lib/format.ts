@@ -1,4 +1,4 @@
-import type { OrderStatus } from "./types";
+﻿import type { OrderStatus } from "./types";
 
 export function money(amount: number) {
   return new Intl.NumberFormat("en-US", {
@@ -28,8 +28,17 @@ export function statusLabel(status: OrderStatus) {
 }
 
 export function generatePublicId() {
+  // Generate 6-digit numeric ID (100000-999999)
   const n = Math.floor(100000 + Math.random() * 900000);
-  return `CF${n}`;
+  const id = `CF${n}`;
+  
+  // Validate it's actually numeric
+  if (!/^CF\d{6}$/.test(id)) {
+    console.error(`[CRITICAL] Invalid order ID generated: ${id}`);
+    throw new Error("Failed to generate valid order ID");
+  }
+  
+  return id;
 }
 
 export function generateTxnId() {
