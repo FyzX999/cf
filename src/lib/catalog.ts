@@ -1,4 +1,4 @@
-import type { Platform, PlatformSlug, Service } from "./types";
+﻿import type { Platform, PlatformSlug, Service } from "./types";
 
 export const platforms: Platform[] = [
   { slug: "instagram", name: "Instagram", accent: "#E1306C", tagline: "Followers, likes, views, and more" },
@@ -93,7 +93,8 @@ const seeds: Record<PlatformSlug, Seed[]> = {
 };
 
 function slugify(platform: PlatformSlug, category: string) {
-  return `${platform}-${category.toLowerCase().replace(/\s+/g, "-")}`;
+  // Remove brackets and other special chars, replace spaces with hyphens
+  return `${platform}-${category.toLowerCase().replace(/[\[\]]/g, "").replace(/\s+/g, "-")}`;
 }
 
 export const services: Service[] = platforms.flatMap((platform, pIndex) =>
@@ -119,7 +120,7 @@ export const services: Service[] = platforms.flatMap((platform, pIndex) =>
       visible: true,
       active: true,
       providerServiceId: null,
-      startTime: seed.rate < 0.2 ? "0–5 min" : "5–30 min",
+      startTime: seed.rate < 0.2 ? "0â€“5 min" : "5â€“30 min",
       popularity: 100 - pIndex * 8 - sIndex * 3,
       description: `High-retention ${platform.name} ${seed.category.toLowerCase()} delivered through the cheapfollower.shop marketplace.`,
     };
