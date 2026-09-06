@@ -264,7 +264,7 @@ export async function checkCashAppPayment(
                         recipient: paymentData.recipient,
                         sender: paymentData.sender,
                         date: parsed.date || new Date(),
-                        emailId: parsed.messageId || ''''
+                        emailId: parsed.messageId || ''
                       });
                       imap.end();
                     } else {
