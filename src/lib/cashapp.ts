@@ -6,6 +6,7 @@ export interface CashAppPayment {
   amount: number;
   note: string;
   recipient: string;
+  sender?: string;
   date: Date;
   emailId: string;
   receiptUrl?: string;
@@ -22,7 +23,7 @@ export interface CashAppConfig {
 /**
  * Parse CashApp payment email HTML to extract amount, note, and recipient
  */
-function parseCashAppEmail(html: string, plainText: string = ''): { amount: number; note: string; recipient: string } | null {
+function parseCashAppEmail(html: string, plainText: string = ''): { amount: number; note: string; recipient: string; sender?: string } | null {
   try {
     const $ = cheerio.load(html);
     
@@ -84,6 +85,22 @@ function parseCashAppEmail(html: string, plainText: string = ''): { amount: numb
       }
     }
 
+    // Find sender cashtag - looking for "from $username" pattern
+    let sender: string | null = null;
+    
+    const senderPatterns = [
+      /(?:from|by)\s+(\$[a-zA-Z0-9_]+)/i,  // "from $username"
+      /(\$[a-zA-Z0-9_]+)\s+(?:sent|paid)/i, // "$username sent"
+    ];
+    
+    for (const pattern of senderPatterns) {
+      const match = allText.match(pattern);
+      if (match) {
+        sender = match[1].toLowerCase();
+        break;
+      }
+    }
+
     // Find note - looking for "For XXXXX" pattern
     let note: string | null = null;
     
@@ -136,10 +153,10 @@ function parseCashAppEmail(html: string, plainText: string = ''): { amount: numb
       }
     }
 
-    console.log(`[CashApp Parser] Amount: ${amount}, Note: ${note}, Recipient: ${recipient}`);
+    console.log(`[CashApp Parser] Amount: ${amount}, Note: ${note}, Recipient: ${recipient}, Sender: ${sender}`);
 
     if (amount !== null && note && recipient) {
-      return { amount, note, recipient };
+      return { amount, note, recipient, sender: sender || undefined };
     }
 
     return null;
@@ -245,8 +262,9 @@ export async function checkCashAppPayment(
                         amount: paymentData.amount,
                         note: paymentData.note,
                         recipient: paymentData.recipient,
+                        sender: paymentData.sender,
                         date: parsed.date || new Date(),
-                        emailId: parsed.messageId || ''
+                        emailId: parsed.messageId || ''''
                       });
                       imap.end();
                     } else {
