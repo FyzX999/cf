@@ -68,14 +68,14 @@ export function profitPerThousand(service: Service) {
  * Remove sensitive data from services before exposing to public
  * SECURITY: Never expose cost, provider IDs, or markup to clients
  */
-export function sanitizeService<T extends Service>(service: T): Omit<T, 'costPerThousand' | 'providerServiceId' | 'markupMultiplier' | 'providerName' | 'providerRate'> {
-  const { costPerThousand, providerServiceId, markupMultiplier, providerName, providerRate, ...safe } = service;
+export function sanitizeService<T extends Service>(service: T): Omit<T, 'costPerThousand' | 'providerServiceId' | 'markupMultiplier' | 'providerName'> {
+  const { costPerThousand, providerServiceId, markupMultiplier, providerName, ...safe } = service as any;
   return safe;
 }
 
 /**
  * Sanitize array of services
  */
-export function sanitizeServices(services: Service[]): Array<Omit<Service, 'costPerThousand' | 'providerServiceId' | 'markupMultiplier' | 'providerName' | 'providerRate'>> {
+export function sanitizeServices(services: Service[]): Array<Omit<Service, 'costPerThousand' | 'providerServiceId' | 'markupMultiplier' | 'providerName'>> {
   return services.map(sanitizeService);
 }
