@@ -25,6 +25,24 @@ export type AdminStore = {
   payments: PaymentRecord[];
   flashSales?: FlashSale[];
   subscriptions?: Subscription[];
+  securityLog?: SecurityLog;
+};
+
+export type SecurityLog = {
+  events: SecurityEvent[];
+  retentionDays: number;
+};
+
+export type SecurityEvent = {
+  id: string;
+  timestamp: string;
+  type: string;
+  actor: string;
+  target?: string;
+  details: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
+  correlationId?: string;
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "admin-store.json");
