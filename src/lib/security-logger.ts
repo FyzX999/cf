@@ -3,6 +3,8 @@
  * SECURITY: Comprehensive audit trail for security-relevant events
  */
 
+import { readStore, writeStore } from './admin-store';
+
 export type SecurityEventType = 
   | 'auth.login.success'
   | 'auth.login.failure'
@@ -38,17 +40,6 @@ const RETENTION_DAYS = 90;
 const MAX_EVENTS_IN_MEMORY = 10000;
 
 /**
- * Hash PII for secure logging
- */
-async function hashPii(value: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(value);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-/**
  * Mask IP address (keep first 2 octets for IPv4)
  */
 export function maskIp(ip: string): string {
@@ -75,7 +66,7 @@ export function logSecurityEvent(event: Omit<SecurityEvent, 'id' | 'timestamp'>)
     ...event,
   };
   
-  // Log to console for immediate visibility (in development and production)
+  // Log to console for immediate visibility
   console.log('[Security Event]', JSON.stringify({
     type: securityEvent.type,
     actor: securityEvent.actor,
@@ -95,9 +86,6 @@ export function logSecurityEvent(event: Omit<SecurityEvent, 'id' | 'timestamp'>)
  * Store security event in admin store
  */
 async function storeSecurityEvent(event: SecurityEvent): Promise<void> {
-  // Dynamically import to avoid circular dependencies
-  const { readStore, writeStore } = await import('./admin-store.js');
-  
   const store = await readStore();
   
   // Initialize security log if it doesn't exist
@@ -120,14 +108,13 @@ async function storeSecurityEvent(event: SecurityEvent): Promise<void> {
     .filter((e: SecurityEvent) => e.timestamp >= cutoffTimestamp)
     .slice(-MAX_EVENTS_IN_MEMORY); // Keep only most recent events
   
-  await writeStore(store);
+  await writeStore(() => store);
 }
 
 /**
  * Get recent security events (for admin dashboard)
  */
 export async function getRecentEvents(limit = 100): Promise<SecurityEvent[]> {
-  const { loadAdminStore } = await import('./admin-store.js');
   const store = await readStore();
   
   if (!store.securityLog) {
@@ -143,7 +130,6 @@ export async function getRecentEvents(limit = 100): Promise<SecurityEvent[]> {
  * Get events by type
  */
 export async function getEventsByType(type: SecurityEventType, limit = 100): Promise<SecurityEvent[]> {
-  const { loadAdminStore } = await import('./admin-store.js');
   const store = await readStore();
   
   if (!store.securityLog) {
@@ -160,7 +146,6 @@ export async function getEventsByType(type: SecurityEventType, limit = 100): Pro
  * Get events by actor
  */
 export async function getEventsByActor(actor: string, limit = 100): Promise<SecurityEvent[]> {
-  const { loadAdminStore } = await import('./admin-store.js');
   const store = await readStore();
   
   if (!store.securityLog) {
@@ -184,7 +169,6 @@ export async function searchEvents(filters: {
   endDate?: string;
   limit?: number;
 }): Promise<SecurityEvent[]> {
-  const { loadAdminStore } = await import('./admin-store.js');
   const store = await readStore();
   
   if (!store.securityLog) {
