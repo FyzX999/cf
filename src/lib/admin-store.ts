@@ -13,6 +13,7 @@ import type {
 } from "./types";
 import type { FlashSale } from './flash-sales';
 import type { Subscription } from './subscriptions';
+import type { SecurityEvent } from './security-logger';
 
 export type AdminStore = {
   settings: SiteSettings;
@@ -31,18 +32,6 @@ export type AdminStore = {
 export type SecurityLog = {
   events: SecurityEvent[];
   retentionDays: number;
-};
-
-export type SecurityEvent = {
-  id: string;
-  timestamp: string;
-  type: string;
-  actor: string;
-  target?: string;
-  details: Record<string, unknown>;
-  ipAddress?: string;
-  userAgent?: string;
-  correlationId?: string;
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "admin-store.json");
