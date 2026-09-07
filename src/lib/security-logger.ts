@@ -96,9 +96,9 @@ export function logSecurityEvent(event: Omit<SecurityEvent, 'id' | 'timestamp'>)
  */
 async function storeSecurityEvent(event: SecurityEvent): Promise<void> {
   // Dynamically import to avoid circular dependencies
-  const { loadAdminStore, saveAdminStore } = await import('./admin-store.js');
+  const { readStore, writeStore } = await import('./admin-store.js');
   
-  const store = await loadAdminStore();
+  const store = await readStore();
   
   // Initialize security log if it doesn't exist
   if (!store.securityLog) {
@@ -117,10 +117,10 @@ async function storeSecurityEvent(event: SecurityEvent): Promise<void> {
   const cutoffTimestamp = cutoffDate.toISOString();
   
   store.securityLog.events = store.securityLog.events
-    .filter(e => e.timestamp >= cutoffTimestamp)
+    .filter((e: SecurityEvent) => e.timestamp >= cutoffTimestamp)
     .slice(-MAX_EVENTS_IN_MEMORY); // Keep only most recent events
   
-  await saveAdminStore(store);
+  await writeStore(store);
 }
 
 /**
@@ -128,7 +128,7 @@ async function storeSecurityEvent(event: SecurityEvent): Promise<void> {
  */
 export async function getRecentEvents(limit = 100): Promise<SecurityEvent[]> {
   const { loadAdminStore } = await import('./admin-store.js');
-  const store = await loadAdminStore();
+  const store = await readStore();
   
   if (!store.securityLog) {
     return [];
@@ -144,14 +144,14 @@ export async function getRecentEvents(limit = 100): Promise<SecurityEvent[]> {
  */
 export async function getEventsByType(type: SecurityEventType, limit = 100): Promise<SecurityEvent[]> {
   const { loadAdminStore } = await import('./admin-store.js');
-  const store = await loadAdminStore();
+  const store = await readStore();
   
   if (!store.securityLog) {
     return [];
   }
   
   return store.securityLog.events
-    .filter(e => e.type === type)
+    .filter((e: SecurityEvent) => e.type === type)
     .slice(-limit)
     .reverse();
 }
@@ -161,14 +161,14 @@ export async function getEventsByType(type: SecurityEventType, limit = 100): Pro
  */
 export async function getEventsByActor(actor: string, limit = 100): Promise<SecurityEvent[]> {
   const { loadAdminStore } = await import('./admin-store.js');
-  const store = await loadAdminStore();
+  const store = await readStore();
   
   if (!store.securityLog) {
     return [];
   }
   
   return store.securityLog.events
-    .filter(e => e.actor === actor)
+    .filter((e: SecurityEvent) => e.actor === actor)
     .slice(-limit)
     .reverse();
 }
@@ -185,7 +185,7 @@ export async function searchEvents(filters: {
   limit?: number;
 }): Promise<SecurityEvent[]> {
   const { loadAdminStore } = await import('./admin-store.js');
-  const store = await loadAdminStore();
+  const store = await readStore();
   
   if (!store.securityLog) {
     return [];
@@ -194,23 +194,23 @@ export async function searchEvents(filters: {
   let events = store.securityLog.events;
   
   if (filters.type) {
-    events = events.filter(e => e.type === filters.type);
+    events = events.filter((e: SecurityEvent) => e.type === filters.type);
   }
   
   if (filters.actor) {
-    events = events.filter(e => e.actor === filters.actor);
+    events = events.filter((e: SecurityEvent) => e.actor === filters.actor);
   }
   
   if (filters.target) {
-    events = events.filter(e => e.target === filters.target);
+    events = events.filter((e: SecurityEvent) => e.target === filters.target);
   }
   
   if (filters.startDate) {
-    events = events.filter(e => e.timestamp >= filters.startDate!);
+    events = events.filter((e: SecurityEvent) => e.timestamp >= filters.startDate!);
   }
   
   if (filters.endDate) {
-    events = events.filter(e => e.timestamp <= filters.endDate!);
+    events = events.filter((e: SecurityEvent) => e.timestamp <= filters.endDate!);
   }
   
   const limit = filters.limit || 100;
