@@ -40,3 +40,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Discord bot files
+discord-bot/__pycache__/
+discord-bot/data/*.db
+discord-bot/logs/*.log
