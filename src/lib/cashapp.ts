@@ -164,7 +164,229 @@ function parseCashAppEmail(html: string, plainText: string = ''): { amount: numb
 }
 
 /**
- * Check for CashApp payment by order ID (note field)
+ * Process ALL UNSEEN payment emails and trigger webhooks
+ * Marks emails as SEEN only after successful webhook firing
+ */
+export async function processUnseenCashAppPayments(
+  config: CashAppConfig,
+  webhookCallback: (payment: CashAppPayment) => Promise<boolean>
+): Promise<{ processed: number; succeeded: number; failed: number }> {
+  console.log('[CashApp Batch] Starting to process UNSEEN payment emails');
+  
+  return new Promise((resolve, reject) => {
+    const imap = new Imap({
+      user: config.email,
+      password: config.password,
+      host: config.imapHost,
+      port: config.imapPort,
+      tls: true,
+      tlsOptions: { rejectUnauthorized: false },
+      connTimeout: 30000,
+      authTimeout: 30000
+    });
+
+    const stats = { processed: 0, succeeded: 0, failed: 0 };
+    const expectedRecipient = config.cashappTag.toLowerCase();
+
+    imap.once('ready', () => {
+      console.log('[CashApp Batch] IMAP connection ready');
+      
+      // Open inbox in READ-WRITE mode (false = writable)
+      imap.openBox('INBOX', false, (err: Error | null) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        // Search for UNSEEN payment emails only
+        imap.search(
+          [
+            'UNSEEN',
+            ['FROM', 'cash@square.com'],
+            ['OR',
+              ['SUBJECT', 'Payment received'],
+              ['SUBJECT', 'sent you']
+            ]
+          ],
+          async (err: Error | null, results: number[]) => {
+            if (err) {
+              reject(err);
+              return;
+            }
+
+            if (!results || results.length === 0) {
+              console.log('[CashApp Batch] No UNSEEN payment emails found');
+              imap.end();
+              resolve(stats);
+              return;
+            }
+
+            console.log(`[CashApp Batch] Found ${results.length} UNSEEN payment emails`);
+
+            // Process emails one by one sequentially
+            try {
+              for (let i = 0; i < results.length; i++) {
+                const emailUid = results[i];
+                console.log(`[CashApp Batch] Processing email ${i + 1}/${results.length} (UID: ${emailUid})`);
+
+                try {
+                  // Fetch single email
+                  const emailData = await fetchSingleEmail(imap, emailUid);
+                  
+                  if (!emailData) {
+                    console.log(`[CashApp Batch] Email ${i + 1}: Could not fetch email data`);
+                    stats.processed++;
+                    continue;
+                  }
+
+                  console.log(`[CashApp Batch] Email ${i + 1} subject: ${emailData.subject}`);
+
+                  // Parse with strict validation
+                  const paymentData = parseCashAppEmail(emailData.html, emailData.plainText);
+
+                  if (!paymentData) {
+                    console.log(`[CashApp Batch] Email ${i + 1}: Skipped (failed strict validation)`);
+                    // Mark as SEEN even if validation failed (not a valid payment)
+                    await markEmailAsSeen(imap, emailUid);
+                    stats.processed++;
+                    continue;
+                  }
+
+                  // Check recipient matches
+                  if (paymentData.recipient.toLowerCase() !== expectedRecipient) {
+                    console.log(`[CashApp Batch] Email ${i + 1}: Recipient mismatch (expected ${expectedRecipient}, got ${paymentData.recipient})`);
+                    // Mark as SEEN (payment to different recipient)
+                    await markEmailAsSeen(imap, emailUid);
+                    stats.processed++;
+                    continue;
+                  }
+
+                  // Valid payment found - fire webhook
+                  console.log(`[CashApp Batch] Email ${i + 1}: Valid payment found - Note: ${paymentData.note}, Amount: $${paymentData.amount}`);
+                  
+                  const payment: CashAppPayment = {
+                    amount: paymentData.amount,
+                    note: paymentData.note,
+                    recipient: paymentData.recipient,
+                    sender: paymentData.sender,
+                    date: emailData.date || new Date(),
+                    emailId: emailData.messageId || ''
+                  };
+
+                  // Fire webhook callback
+                  let webhookSuccess = false;
+                  try {
+                    webhookSuccess = await webhookCallback(payment);
+                  } catch (webhookError) {
+                    console.error(`[CashApp Batch] Email ${i + 1}: Webhook failed:`, webhookError);
+                    webhookSuccess = false;
+                  }
+
+                  if (webhookSuccess) {
+                    console.log(`[CashApp Batch] Email ${i + 1}: ✅ Webhook succeeded - marking as SEEN`);
+                    await markEmailAsSeen(imap, emailUid);
+                    stats.succeeded++;
+                  } else {
+                    console.log(`[CashApp Batch] Email ${i + 1}: ❌ Webhook failed - leaving as UNSEEN for retry`);
+                    stats.failed++;
+                  }
+
+                  stats.processed++;
+
+                } catch (emailError) {
+                  console.error(`[CashApp Batch] Email ${i + 1}: Error processing:`, emailError);
+                  stats.processed++;
+                  stats.failed++;
+                  // Don't mark as SEEN on processing errors - will retry next time
+                }
+              }
+
+              // All emails processed
+              console.log(`[CashApp Batch] Processing complete - Processed: ${stats.processed}, Succeeded: ${stats.succeeded}, Failed: ${stats.failed}`);
+              imap.end();
+              resolve(stats);
+
+            } catch (batchError) {
+              console.error('[CashApp Batch] Batch processing error:', batchError);
+              imap.end();
+              reject(batchError);
+            }
+          }
+        );
+      });
+    });
+
+    imap.once('error', (err: Error) => {
+      console.error('[CashApp Batch] IMAP error:', err);
+      reject(err);
+    });
+
+    imap.once('end', () => {
+      console.log('[CashApp Batch] IMAP connection ended');
+    });
+
+    imap.connect();
+  });
+}
+
+/**
+ * Fetch a single email by UID
+ */
+function fetchSingleEmail(imap: Imap, uid: number): Promise<{ subject: string; html: string; plainText: string; date: Date; messageId: string } | null> {
+  return new Promise((resolve) => {
+    const fetch = imap.fetch([uid], { bodies: '' });
+    let emailData: any = null;
+
+    fetch.on('message', (msg: Imap.ImapMessage) => {
+      msg.on('body', (stream: NodeJS.ReadableStream) => {
+        simpleParser(stream as any, (err: Error | undefined, parsed: any) => {
+          if (err) {
+            console.error('[CashApp Batch] Email parse error:', err);
+            resolve(null);
+            return;
+          }
+
+          emailData = {
+            subject: parsed.subject || '',
+            html: parsed.html || '',
+            plainText: parsed.text || '',
+            date: parsed.date || new Date(),
+            messageId: parsed.messageId || ''
+          };
+        });
+      });
+    });
+
+    fetch.once('error', (err: Error) => {
+      console.error('[CashApp Batch] Fetch error:', err);
+      resolve(null);
+    });
+
+    fetch.once('end', () => {
+      resolve(emailData);
+    });
+  });
+}
+
+/**
+ * Mark an email as SEEN by UID
+ */
+function markEmailAsSeen(imap: Imap, uid: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    imap.addFlags(uid, ['\\Seen'], (err: Error | null) => {
+      if (err) {
+        console.error(`[CashApp Batch] Failed to mark UID ${uid} as SEEN:`, err);
+        reject(err);
+      } else {
+        console.log(`[CashApp Batch] Marked UID ${uid} as SEEN`);
+        resolve();
+      }
+    });
+  });
+}
+
+/**
+ * Check for CashApp payment by order ID (note field) - LEGACY METHOD
  * STRICT VALIDATION: Only searches emails with "Payment received" or "sent you" in subject
  */
 export async function checkCashAppPayment(
