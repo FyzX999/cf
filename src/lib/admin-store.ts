@@ -53,7 +53,8 @@ export const defaultSettings = (): SiteSettings => {
     currency: process.env.CURRENCY || "USD",
     deliveryMultipliers: { 
       standard: Number(process.env.DELIVERY_STANDARD || 1), 
-      fast: Number(process.env.DELIVERY_FAST || 1.35), 
+      fast: Number(process.env.DELIVERY_FAST || 1.35),
+      express: Number(process.env.DELIVERY_EXPRESS || 1.5), 
       drip: Number(process.env.DELIVERY_DRIP || 1.15)
     },
     autoSyncProviderCost: process.env.AUTO_SYNC_COST === 'true',
@@ -316,3 +317,4 @@ export async function replyTicket(id: string, body: string, status?: StoredTicke
   if (!found) throw new Error("Ticket not found");
   return found;
 }
+

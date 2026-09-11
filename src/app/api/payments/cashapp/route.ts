@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     // Check payment with retry logic
     const dedupKey = `cashapp-check-${orderId}`;
     const result = await withDeduplication(dedupKey, () =>
-      checkCashAppPayment(config as any, orderId, Number(payment.amount) || 0)
+      checkCashAppPayment(config as any, orderId, Number(payment.amount || 0))
     );
 
     if (!result || !(result as any).found) {
@@ -89,3 +89,5 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+
