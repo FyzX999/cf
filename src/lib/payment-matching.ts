@@ -167,6 +167,7 @@ export function matchPayment(options: {
   expectedRecipient: string;
   orderIdMaxDistance?: number; // Levenshtein distance tolerance
   amountToleranceCents?: number;
+  requireRecipientMatch?: boolean; // If false, recipient mismatch doesn't fail the match (default: true)
 }): {
   matched: boolean;
   details: {
@@ -209,7 +210,8 @@ export function matchPayment(options: {
     options.extractedRecipient.toLowerCase() === 
     options.expectedRecipient.toLowerCase();
 
-  const overallMatch = orderIdMatch.matched && amountMatch.matched && recipientMatch;
+  const requireRecipient = options.requireRecipientMatch !== false;
+  const overallMatch = orderIdMatch.matched && amountMatch.matched && (requireRecipient ? recipientMatch : true);
 
   return {
     matched: overallMatch,

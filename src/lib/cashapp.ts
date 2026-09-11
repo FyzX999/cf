@@ -503,13 +503,15 @@ export async function checkCashAppPayment(
                   console.log(`[CashApp] Email ${emailCount}: Looking for order ${orderId}, amount $${expectedAmount}, to ${expectedRecipient}`);
                   console.log(`[CashApp] Email ${emailCount}: Found note=${paymentData.note}, amount=$${paymentData.amount}, recipient=${paymentData.recipient}`);
 
-                  // Check if recipient matches
+                  // Note: Recipient validation is optional - CashApp displays account name, not cashtag
+                  // Primary validation is order ID + amount matching
                   if (paymentData.recipient.toLowerCase() !== expectedRecipient) {
-                    console.log(`[CashApp] ❌ Recipient mismatch: expected ${expectedRecipient}, got ${paymentData.recipient}`);
-                    return;
+                    console.log(`[CashApp] ⚠️  Recipient mismatch: expected ${expectedRecipient}, got ${paymentData.recipient} (proceeding with ID+amount validation)`);
                   }
 
                   // Use fuzzy matching for order ID and amount matching
+                  // NOTE: Recipient check is optional because CashApp emails show account display name,
+                  // not the configured cashtag. Order ID + amount is the authoritative validation.
                   const matchResult = matchPayment({
                     extractedOrderId: paymentData.note,
                     expectedOrderId: orderId,
@@ -519,6 +521,7 @@ export async function checkCashAppPayment(
                     expectedRecipient,
                     orderIdMaxDistance: 2, // Allow 2 character differences (typo tolerance)
                     amountToleranceCents: 1, // Allow 1 cent difference (rounding)
+                    requireRecipientMatch: false, // Recipient is informational only
                   });
 
                   // Log detailed matching info
