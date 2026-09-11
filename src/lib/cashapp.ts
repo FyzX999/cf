@@ -469,38 +469,6 @@ export async function checkCashAppPayment(
                     return;
                   }
 
-        // STRICT RULE: Search for emails with specific subjects only - ignore login codes
-        // Using OR condition: (SUBJECT "Payment received" OR SUBJECT "sent you")
-        imap.search(
-          [
-            ['FROM', 'cash@square.com'],
-            ['OR',
-              ['SUBJECT', 'Payment received'],
-              ['SUBJECT', 'sent you']
-            ],
-            ['SINCE', new Date(Date.now() - IMAP_CONFIG.CHECK_SEARCH_DAYS * 24 * 60 * 60 * 1000)]
-          ],
-          (err: Error | null, results: number[]) => {
-            if (err) {
-              reject(err);
-              return;
-            }
-
-            if (!results || results.length === 0) {
-              console.log('[CashApp] No payment emails found (filtered for "Payment received" or "sent you" subjects)');
-              imap.end();
-              resolve(null);
-              return;
-            }
-
-            console.log(`[CashApp] Found ${results.length} payment emails from cash@square.com (filtered by subject)`);
-            const fetch = imap.fetch(results, { bodies: '' });
-
-            fetch.on('message', (msg: Imap.ImapMessage) => {
-              msg.on('body', (stream: NodeJS.ReadableStream) => {
-                simpleParser(stream as any, async (err: Error | undefined, parsed: any) => {
-                  if (err || found) return;
-
                   emailCount++;
                   const html = parsed.html || '';
                   const plainText = parsed.text || '';
