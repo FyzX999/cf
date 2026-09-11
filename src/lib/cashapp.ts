@@ -1,6 +1,9 @@
 ﻿import Imap from 'imap';
 import { simpleParser } from 'mailparser';
 import * as cheerio from 'cheerio';
+import { CASHAPP_PATTERNS, IMAP_CONFIG, PAYMENT_VALIDATION } from './payment-constants';
+import { PaymentError, PaymentErrorCode } from './payment-errors';
+import { retryWithBackoff } from './payment-retry';
 
 export interface CashAppPayment {
   amount: number;
@@ -23,14 +26,15 @@ export interface CashAppConfig {
 /**
  * Parse CashApp payment email HTML to extract amount, note, and recipient
  * STRICT VALIDATION: Only accepts emails with "You were sent" phrase and CF-formatted notes
+ * EXPORTED: Use this for all CashApp email parsing to ensure consistency
  */
-function parseCashAppEmail(html: string, plainText: string = ''): { amount: number; note: string; recipient: string; sender?: string } | null {
+export function parseCashAppEmail(html: string, plainText: string = ''): { amount: number; note: string; recipient: string; sender?: string } | null {
   try {
     const $ = cheerio.load(html);
     const allText = $.text() + ' ' + plainText;
     
     // STRICT RULE 1: Must contain "You were sent" - reject "You paid"
-    if (!allText.includes('You were sent')) {
+    if (!allText.includes(CASHAPP_PATTERNS.RECEIVED_PHRASE)) {
       console.log('[CashApp Parser] ❌ Rejected: Missing "You were sent" phrase (might be "You paid")');
       return null;
     }
@@ -41,7 +45,7 @@ function parseCashAppEmail(html: string, plainText: string = ''): { amount: numb
     let amount: number | null = null;
     
     // Primary pattern: "You were sent $XX.XX" or "You were sent $XX"
-    const strictAmountPattern = /You were sent \$(\d+(?:\.\d{1,2})?)/i;
+    const strictAmountPattern = CASHAPP_PATTERNS.AMOUNT_REGEX;
     
     // Try plain text first (most reliable)
     let match = plainText.match(strictAmountPattern);
@@ -68,10 +72,7 @@ function parseCashAppEmail(html: string, plainText: string = ''): { amount: numb
     // Find recipient cashtag - looking for $username pattern
     let recipient: string | null = null;
     
-    const recipientPatterns = [
-      /(?:to|paid)\s+(\$[a-zA-Z0-9_]+)/i,  // "to $followermarket"
-      /(\$[a-zA-Z0-9_]+)\s+(?:received|got)/i, // "$followermarket received"
-    ];
+    const recipientPatterns = CASHAPP_PATTERNS.RECIPIENT_PATTERNS;
     
     for (const pattern of recipientPatterns) {
       const match = allText.match(pattern);
@@ -84,10 +85,7 @@ function parseCashAppEmail(html: string, plainText: string = ''): { amount: numb
     // Find sender cashtag - looking for "from $username" pattern
     let sender: string | null = null;
     
-    const senderPatterns = [
-      /(?:from|by)\s+(\$[a-zA-Z0-9_]+)/i,  // "from $username"
-      /(\$[a-zA-Z0-9_]+)\s+(?:sent|paid)/i, // "$username sent"
-    ];
+    const senderPatterns = CASHAPP_PATTERNS.SENDER_PATTERNS;
     
     for (const pattern of senderPatterns) {
       const match = allText.match(pattern);
@@ -101,12 +99,7 @@ function parseCashAppEmail(html: string, plainText: string = ''): { amount: numb
     let note: string | null = null;
     
     // Strict CF pattern: CF followed by digits
-    const strictCFPatterns = [
-      /\bCF(\d{6,})\b/i,       // CF123456 (6+ digits, word boundary)
-      /For[:\s]+CF(\d{6,})\b/i, // For CF123456 or For: CF123456
-      /Note[:\s]+CF(\d{6,})\b/i, // Note CF123456 or Note: CF123456
-      /Memo[:\s]+CF(\d{6,})\b/i, // Memo CF123456 or Memo: CF123456
-    ];
+    const strictCFPatterns = CASHAPP_PATTERNS.CF_PATTERNS;
     
     // Try plain text first (most reliable)
     for (const pattern of strictCFPatterns) {
@@ -402,8 +395,12 @@ export async function checkCashAppPayment(
     const timeout = setTimeout(() => {
       console.log('[CashApp] ⏱️ Timeout after 60 seconds');
       imap.end();
-      resolve(null);
-    }, 60000);
+      reject(new PaymentError(
+        PaymentErrorCode.TIMEOUT,
+        'Email check timeout after 60 seconds',
+        408
+      ));
+    }, IMAP_CONFIG.SEARCH_TIMEOUT_MS);
 
     const imap = new Imap({
       user: config.email,
@@ -411,9 +408,9 @@ export async function checkCashAppPayment(
       host: config.imapHost,
       port: config.imapPort,
       tls: true,
-      tlsOptions: { rejectUnauthorized: false },
-      connTimeout: 30000, // 30 second connection timeout
-      authTimeout: 30000  // 30 second auth timeout
+      tlsOptions: IMAP_CONFIG.TLS_OPTIONS,
+      connTimeout: IMAP_CONFIG.CONN_TIMEOUT_MS,
+      authTimeout: IMAP_CONFIG.AUTH_TIMEOUT_MS,
     });
 
     let found = false;
@@ -437,7 +434,7 @@ export async function checkCashAppPayment(
               ['SUBJECT', 'Payment received'],
               ['SUBJECT', 'sent you']
             ],
-            ['SINCE', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)] // Last 7 days
+            ['SINCE', new Date(Date.now() - IMAP_CONFIG.CHECK_SEARCH_DAYS * 24 * 60 * 60 * 1000)]
           ],
           (err: Error | null, results: number[]) => {
             if (err) {
@@ -528,7 +525,11 @@ export async function checkCashAppPayment(
     imap.once('error', (err: Error) => {
       clearTimeout(timeout);
       console.error('[CashApp] IMAP error:', err);
-      reject(err);
+      reject(new PaymentError(
+        PaymentErrorCode.EMAIL_CONNECTION_ERROR,
+        `Email connection failed: ${err.message}`,
+        503
+      ));
     });
 
     imap.once('end', () => {

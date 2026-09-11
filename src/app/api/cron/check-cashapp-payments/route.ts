@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCashAppConfig } from "@/lib/cashapp";
+import { getCashAppConfig, parseCashAppEmail } from "@/lib/cashapp";
 import Imap from 'imap';
 import { simpleParser } from 'mailparser';
-import * as cheerio from 'cheerio';
 import { readStore } from "@/lib/admin-store";
 import { settlePayment } from "@/lib/payments";
 
@@ -12,62 +11,10 @@ export const maxDuration = 60;
 interface EmailPayment {
   amount: number;
   note: string;
+  recipient: string;
+  sender?: string;
   date: Date;
   emailId: string;
-}
-
-function parseCashAppEmail(html: string, plainText: string = ''): EmailPayment | null {
-  try {
-    const $ = cheerio.load(html);
-    let amount: number | null = null;
-    const amountPatterns = [/\+\$(\d+\.?\d*)/, /\$(\d+\.\d{2})/, /(\d+\.\d{2})\s*USD/i];
-    
-    $('*').each((_, elem) => {
-      if (amount) return false;
-      const text = $(elem).text().trim();
-      for (const pattern of amountPatterns) {
-        const match = text.match(pattern);
-        if (match) {
-          const parsed = parseFloat(match[1]);
-          if (parsed > 0 && parsed < 10000) {
-            amount = parsed;
-            return false;
-          }
-        }
-      }
-    });
-
-    let note: string | null = null;
-    $('.profile-description, .text-subtle, [class*="note"], [class*="memo"]').each((_, elem) => {
-      if (note) return false;
-      const text = $(elem).text().trim();
-      const match = text.match(/For\s+([A-Z]{2}\d{6})/i);
-      if (match) {
-        note = match[1].trim().toUpperCase();
-        return false;
-      }
-    });
-
-    if (!note) {
-      const allText = $.text() + ' ' + plainText;
-      const patterns = [/For\s+([A-Z]{2}\d{6})/i, /For:\s*([A-Z]{2}\d{6})/i, /Note:\s*([A-Z]{2}\d{6})/i];
-      for (const pattern of patterns) {
-        const match = allText.match(pattern);
-        if (match) {
-          note = match[1].trim().toUpperCase();
-          break;
-        }
-      }
-    }
-
-    if (amount !== null && note) {
-      return { amount, note, date: new Date(), emailId: '' };
-    }
-    return null;
-  } catch (error) {
-    console.error('[Cron] Error parsing email:', error);
-    return null;
-  }
 }
 
 async function fetchCashAppEmails(config: any): Promise<EmailPayment[]> {
@@ -130,13 +77,21 @@ async function fetchCashAppEmails(config: any): Promise<EmailPayment[]> {
 
                   const html = parsed.html || '';
                   const plainText = parsed.text || '';
-                  const payment = parseCashAppEmail(html, plainText);
+                  
+                  // Use the strict parser from cashapp.ts
+                  const paymentData = parseCashAppEmail(html, plainText);
 
-                  if (payment) {
-                    payment.emailId = parsed.messageId || '';
-                    payment.date = parsed.date || new Date();
+                  if (paymentData) {
+                    const payment: EmailPayment = {
+                      amount: paymentData.amount,
+                      note: paymentData.note,
+                      recipient: paymentData.recipient,
+                      sender: paymentData.sender,
+                      emailId: parsed.messageId || '',
+                      date: parsed.date || new Date()
+                    };
                     emails.push(payment);
-                    console.log(`[Cron] Parsed: ${payment.note} - $${payment.amount}`);
+                    console.log(`[Cron] Parsed: ${payment.note} - $${payment.amount} to ${payment.recipient}`);
                   }
                 });
               });
@@ -193,22 +148,29 @@ export async function GET(req: NextRequest) {
 
     let completedCount = 0;
     const matched: string[] = [];
+    const expectedRecipient = config.cashappTag.toLowerCase();
 
     for (const email of emails) {
+      // Validate recipient matches
+      if (email.recipient.toLowerCase() !== expectedRecipient) {
+        console.log(`[Cron] ❌ Recipient mismatch for ${email.note}: expected ${expectedRecipient}, got ${email.recipient}`);
+        continue;
+      }
+
       for (const payment of pendingPayments) {
         if (
           payment.gatewayId.toUpperCase() === email.note.toUpperCase() &&
           Math.abs(payment.amount - email.amount) < 0.01
         ) {
-          console.log(`[Cron] Match found: ${email.note} - $${email.amount}`);
+          console.log(`[Cron] ✅ Match found: ${email.note} - $${email.amount} to ${email.recipient}`);
           
           try {
             await settlePayment(payment);
             completedCount++;
             matched.push(email.note);
-            console.log(`[Cron] Payment ${email.note} completed`);
+            console.log(`[Cron] ✅ Payment ${email.note} completed`);
           } catch (error) {
-            console.error(`[Cron] Error settling payment ${email.note}:`, error);
+            console.error(`[Cron] ❌ Error settling payment ${email.note}:`, error);
           }
         }
       }

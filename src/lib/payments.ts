@@ -3,6 +3,8 @@ import { creditWallet } from "./commerce";
 import { payOrder } from "./orders";
 import { readStore, writeStore } from "./admin-store";
 import type { PaymentKind, PaymentProvider, PaymentRecord } from "./types";
+import { PaymentError, PaymentErrorCode } from "./payment-errors";
+import { logPaymentCreated } from "./payment-audit";
 
 function siteUrl() {
   return (process.env.NEXT_PUBLIC_SITE_URL || "https://cheapfollower.shop").replace(/\/$/, "");
@@ -454,17 +456,24 @@ export async function createCashAppInvoice(input: {
   publicId?: string;
   userId?: string;
 }) {
-  console.log('[CashApp Invoice] ========== START ==========');
-  console.log('[CashApp Invoice] Full input:', JSON.stringify(input, null, 2));
-  console.log('[CashApp Invoice] publicId received:', input.publicId);
-  console.log('[CashApp Invoice] userId received:', input.userId);
-  console.log('[CashApp Invoice] kind:', input.kind);
-  console.log('[CashApp Invoice] amount:', input.amount);
-  
   const cashappTag = process.env.CASHAPP_TAG;
-  if (!cashappTag) throw new Error("CashApp is not configured. Set CASHAPP_TAG.");
+  if (!cashappTag) {
+    throw new PaymentError(
+      PaymentErrorCode.NOT_CONFIGURED,
+      "CashApp is not configured. Set CASHAPP_TAG.",
+      503
+    );
+  }
+
   const amount = Number(input.amount.toFixed(2));
-  if (!(amount > 0)) throw new Error("Amount must be greater than zero");
+  if (!(amount > 0)) {
+    throw new PaymentError(
+      PaymentErrorCode.INVALID_AMOUNT,
+      "Amount must be greater than zero",
+      400,
+      { amount }
+    );
+  }
 
   // For CashApp, we create a "pending" payment record and return instructions
   // The actual payment verification happens via email monitoring
@@ -480,6 +489,14 @@ export async function createCashAppInvoice(input: {
     createdAt: new Date().toISOString(),
   };
   await savePayment(record);
+
+  // Log payment creation
+  await logPaymentCreated(
+    input.publicId || `wallet-${input.userId}`,
+    amount,
+    "cashapp",
+    input.userId
+  );
 
   // Return instructions instead of redirect URL
   return {

@@ -203,15 +203,33 @@ export async function readStore(): Promise<AdminStore> {
 }
 
 async function persist(next: AdminStore) {
-  if (IS_VERCEL) {
-    // On Vercel, save to Supabase
-    await writeToSupabase(next);
-  } else {
-    // Local: save to file
-    await mkdir(path.dirname(STORE_PATH), { recursive: true });
-    await writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
+  try {
+    if (IS_VERCEL) {
+      // On Vercel, save to Supabase
+      await writeToSupabase(next);
+    } else {
+      // Local: save to file
+      await mkdir(path.dirname(STORE_PATH), { recursive: true });
+      await writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
+    }
+    cache = { at: Date.now(), data: next };
+  } catch (error) {
+    console.error('[AdminStore] Fatal persist error:', error);
+    
+    // Log the error but don't crash - cache is still valid
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error(`[AdminStore] Failed to persist data: ${errorMsg}`);
+    
+    // Keep cache as-is so reads continue to work
+    if (cache) {
+      console.warn('[AdminStore] Using cached data, writes may be lost!');
+    } else {
+      // If no cache, update it anyway to prevent total failure
+      cache = { at: Date.now(), data: next };
+    }
+    
+    throw new Error(`Failed to persist admin store: ${errorMsg}`);
   }
-  cache = { at: Date.now(), data: next };
 }
 
 export async function writeStore(mutator: (current: AdminStore) => AdminStore) {

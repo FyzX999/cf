@@ -2,6 +2,7 @@ import { getOrder } from "@/lib/orders";
 import { paymentConfig, startCheckout } from "@/lib/payments";
 import { getAuthUser } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
+import { PaymentError, paymentErrorToResponse } from "@/lib/payment-errors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -113,9 +114,11 @@ export async function POST(req: Request) {
     
     return NextResponse.json({ url: (result as { url: string }).url });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Checkout failed" },
-      { status: 400 },
-    );
+    const response = error instanceof PaymentError 
+      ? error.toJSON()
+      : paymentErrorToResponse(error);
+    
+    const statusCode = error instanceof PaymentError ? error.statusCode : 400;
+    return NextResponse.json(response, { status: statusCode });
   }
 }

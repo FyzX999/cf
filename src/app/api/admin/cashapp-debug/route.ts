@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Imap from 'imap';
 import { simpleParser } from 'mailparser';
-import * as cheerio from 'cheerio';
-import { getCashAppConfig } from "@/lib/cashapp";
+import { getCashAppConfig, parseCashAppEmail } from "@/lib/cashapp";
 import { adminCookieName, isValidAdminSession } from '@/lib/admin-auth';
 
 /**
@@ -98,59 +97,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
                     const html = parsed.html || '';
                     const plainText = parsed.text || '';
-                    const $ = cheerio.load(html);
-
-                    // Extract amount - improved patterns
-                    let amount: number | null = null;
-                    const amountPatterns = [
-                      /\+\$(\d+\.?\d*)/,
-                      /\$(\d+\.\d{2})/,
-                      /(\d+\.\d{2})\s*USD/i,
-                    ];
                     
-                    $('*').each((_, elem) => {
-                      if (amount) return false;
-                      const text = $(elem).text().trim();
-                      for (const pattern of amountPatterns) {
-                        const match = text.match(pattern);
-                        if (match) {
-                          const parsed = parseFloat(match[1]);
-                          if (parsed > 0 && parsed < 10000) {
-                            amount = parsed;
-                            return false;
-                          }
-                        }
-                      }
-                    });
-
-                    // Extract note - improved patterns
-                    let note: string | null = null;
-                    $('.profile-description, .text-subtle, [class*="note"], [class*="memo"]').each((_, elem) => {
-                      if (note) return false;
-                      const text = $(elem).text().trim();
-                      const match = text.match(/For\s+([A-Z0-9]+)/i);
-                      if (match) {
-                        note = match[1].trim();
-                        return false;
-                      }
-                    });
-
-                    // Fallback: search entire text
-                    if (!note) {
-                      const allText = $.text() + ' ' + plainText;
-                      const patterns = [
-                        /For\s+([A-Z]{2}\d{6})/i,
-                        /For:\s*([A-Z]{2}\d{6})/i,
-                        /Note:\s*([A-Z]{2}\d{6})/i,
-                      ];
-                      for (const pattern of patterns) {
-                        const match = allText.match(pattern);
-                        if (match) {
-                          note = match[1].trim();
-                          break;
-                        }
-                      }
-                    }
+                    // Use strict parser from cashapp.ts
+                    const paymentData = parseCashAppEmail(html, plainText);
 
                     emails.push({
                       date: parsed.date,
@@ -158,16 +107,21 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                       from: parsed.from?.text,
                       messageId: parsed.messageId,
                       parsed: {
-                        amount,
-                        note
+                        amount: paymentData?.amount || null,
+                        note: paymentData?.note || null,
+                        recipient: paymentData?.recipient || null,
+                        sender: paymentData?.sender || null,
+                        isValid: paymentData !== null
                       },
                       // More preview for debugging
                       textPreview: plainText?.substring(0, 1500),
                       htmlPreview: html?.substring(0, 1500),
                       // Show what patterns we're searching for
-                      searchPatterns: {
-                        amountPatterns: ['\\+\\$', '\\$\\d+\\.\\d{2}', '\\d+\\.\\d{2}\\s*USD'],
-                        notePatterns: ['For\\s+([A-Z]{2}\\d{6})', 'For:\\s*([A-Z]{2}\\d{6})', 'Note:\\s*([A-Z]{2}\\d{6})']
+                      validationRules: {
+                        requiresPhrase: 'You were sent',
+                        requiresNote: 'CF format (CF followed by 6+ digits)',
+                        requiresAmount: 'Positive amount under $10,000',
+                        requiresRecipient: 'CashApp recipient tag'
                       }
                     });
                   });

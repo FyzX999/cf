@@ -15,11 +15,20 @@
       "fast": 1.35,
       "drip": 1.15
     },
-    "autoSyncProviderCost": false
+    "autoSyncProviderCost": false,
+    "baseOrderCount": 0
   },
   "services": {},
   "tickets": [],
-  "audit": [],
+  "audit": [
+    {
+      "id": "1789093914595-8770",
+      "time": "2026-09-11T02:31:54.595Z",
+      "actor": "89da975d-ba15-4748-a86e-0f535b894a6e",
+      "action": "payment_created:CF804445",
+      "target": "cashapp:0.09"
+    }
+  ],
   "promoCodes": [
     {
       "code": "WELCOME10",
@@ -86,6 +95,17 @@
     }
   },
   "payments": [
+    {
+      "id": "pay_67c1d244ade740ea",
+      "provider": "cashapp",
+      "kind": "order",
+      "status": "pending",
+      "amount": 0.09,
+      "publicId": "CF804445",
+      "userId": "89da975d-ba15-4748-a86e-0f535b894a6e",
+      "gatewayId": "CF804445",
+      "createdAt": "2026-09-11T02:31:54.465Z"
+    },
     {
       "id": "pay_ff1addd62e5847a8",
       "provider": "nowpayments",
@@ -193,5 +213,7 @@
       "invoiceUrl": "https://nowpayments.io/payment/?iid=4983987504",
       "createdAt": "2026-08-20T21:23:35.628Z"
     }
-  ]
+  ],
+  "flashSales": [],
+  "subscriptions": []
 }
