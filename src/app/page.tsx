@@ -26,7 +26,9 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
+  console.log("[HomePage] Rendering...");
   const [{ settings }, user] = await Promise.all([readStore(), getAuthUser()]);
+  console.log("[HomePage] Loaded settings and user");
   
   // Organization structured data
   const organizationSchema = {
