@@ -174,7 +174,7 @@ export async function handleNowpaymentsIpn(payload: {
     const orderId = String(payload.order_id);
     record =
       store.payments.find(
-        (p) =>
+        (p: PaymentRecord) =>
           p.provider === 'nowpayments' &&
           p.status === 'pending' &&
           orderId.includes(p.publicId ?? p.userId ?? ''),

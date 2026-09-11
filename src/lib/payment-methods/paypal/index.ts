@@ -226,7 +226,7 @@ export async function handlePaypalWebhookEvent(event: {
   if (customId) {
     const store = await readStore();
     const pending = store.payments.find(
-      (p) => p.provider === 'paypal' && p.status === 'pending' && (p.publicId === customId || p.gatewayId === customId),
+      (p: PaymentRecord) => p.provider === 'paypal' && p.status === 'pending' && (p.publicId === customId || p.gatewayId === customId),
     );
     if (pending) {
       const payment = await capturePaypalOrder(pending.gatewayId);

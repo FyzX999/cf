@@ -7,9 +7,6 @@ import { retryWithBackoff } from '../shared/payment-retry';
 import { matchPayment, logPaymentMatchDetails } from '../shared/payment-matching';
 import { queueUnmatchedPayment } from '../shared/payment-review-queue';
 
-// Re-export from index for backward compatibility
-export { checkCashAppPayment, getCashAppConfig, parseCashAppEmail, processUnseenCashAppPayments };
-
 export interface CashAppPayment {
   amount: number;
   note: string;

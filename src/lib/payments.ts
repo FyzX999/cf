@@ -94,6 +94,8 @@ async function savePayment(record: PaymentRecord) {
   });
 }
 
+export { savePayment, readStore };
+
 export async function findPaymentByGatewayId(gatewayId: string) {
   const store = await readStore();
   return store.payments.find((p) => p.gatewayId === gatewayId) ?? null;
