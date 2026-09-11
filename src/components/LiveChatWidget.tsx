@@ -1,11 +1,17 @@
-"use client";
+﻿"use client";
 
 import { useEffect } from "react";
+
+declare global {
+  interface Window {
+    $crisp?: any[];
+    CRISP_WEBSITE_ID?: string;
+  }
+}
 
 export function LiveChatWidget() {
   useEffect(() => {
     // Initialize Crisp chat widget
-    // Replace with your actual Crisp website ID
     const CRISP_WEBSITE_ID = process.env.NEXT_PUBLIC_CRISP_WEBSITE_ID;
 
     if (!CRISP_WEBSITE_ID) {
@@ -14,29 +20,29 @@ export function LiveChatWidget() {
     }
 
     // Load Crisp script
-    window.$crisp = [];
-    window.CRISP_WEBSITE_ID = CRISP_WEBSITE_ID;
+    if (typeof window !== "undefined") {
+      window.$crisp = [];
+      window.CRISP_WEBSITE_ID = CRISP_WEBSITE_ID;
 
-    const script = document.createElement("script");
-    script.src = "https://client.crisp.chat/l.js";
-    script.async = true;
-    document.body.appendChild(script);
+      const script = document.createElement("script");
+      script.src = "https://client.crisp.chat/l.js";
+      script.async = true;
+      document.body.appendChild(script);
 
-    return () => {
-      // Cleanup if needed
-      const scriptElement = document.querySelector(
-        'script[src="https://client.crisp.chat/l.js"]'
-      );
-      if (scriptElement) {
-        scriptElement.remove();
-      }
-    };
+      return () => {
+        const scriptElement = document.querySelector(
+          'script[src="https://client.crisp.chat/l.js"]'
+        );
+        if (scriptElement) {
+          scriptElement.remove();
+        }
+      };
+    }
   }, []);
 
-  return null; // Crisp widget loads independently
+  return null;
 }
 
-// Alternative: Simple support button with email integration
 export function SimpleLiveChat() {
   return (
     <div className="fixed bottom-4 right-4 z-50">
@@ -53,7 +59,6 @@ export function SimpleLiveChat() {
         </div>
       </button>
 
-      {/* Tooltip */}
       <div className="absolute bottom-16 right-0 bg-white/95 text-gray-900 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
         Live Chat Support
       </div>

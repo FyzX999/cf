@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { checkCashAppPayment, getCashAppConfig } from "@/lib/cashapp";
 import { findPaymentByGatewayId, settlePayment } from "@/lib/payments";
-import { PaymentError, paymentErrorToResponse, validateOrderId } from "@/lib/payment-errors";
+import { PaymentError, PaymentErrorCode, paymentErrorToResponse, validateOrderId } from "@/lib/payment-errors";
 import { withDeduplication } from "@/lib/payment-retry";
 
 /**
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     // Validate order ID format
     if (!validateOrderId(orderId)) {
       throw new PaymentError(
-        'INVALID_ORDER_ID',
+        PaymentErrorCode.INVALID_ORDER_ID,
         'Invalid order ID format (expected: CFXXXXXX)',
         400
       );
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     if (!config) {
       console.error('[CashApp API] Config not found - check environment variables');
       throw new PaymentError(
-        'PAYMENT_NOT_CONFIGURED',
+        PaymentErrorCode.NOT_CONFIGURED,
         "CashApp is not configured",
         503
       );
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     const payment = await findPaymentByGatewayId(orderId);
     if (!payment) {
       throw new PaymentError(
-        'PAYMENT_NOT_FOUND',
+        PaymentErrorCode.NOT_FOUND,
         "Payment not found",
         404
       );
@@ -48,47 +48,44 @@ export async function POST(req: NextRequest) {
     if (payment.status === "completed") {
       return NextResponse.json({
         status: "completed",
-        payment,
+        message: "Payment already processed",
       });
     }
 
-    // Check email for payment with deduplication to prevent duplicate checks
-    console.log(`[CashApp API] Checking payment for order ${orderId}, amount $${payment.amount}`);
-    
-    const cashappPayment = await withDeduplication(
-      `cashapp-check:${orderId}`,
-      () => checkCashAppPayment(
-        orderId,
-        payment.amount,
-        config
-      )
+    // Check payment with retry logic
+    const dedupKey = `cashapp-check-${orderId}`;
+    const result = await withDeduplication(dedupKey, () =>
+      checkCashAppPayment(config, orderId, payment.amount)
     );
 
-    if (!cashappPayment) {
-      console.log(`[CashApp API] ❌ Payment not found for order ${orderId}`);
+    if (!result.found) {
       return NextResponse.json({
         status: "pending",
-        message: "Payment not yet received. Please wait for email confirmation (usually 5-7 minutes after payment).",
+        message: "Payment not found yet",
       });
     }
 
-    console.log(`[CashApp API] ✅ Payment found for order ${orderId}, settling...`);
-
     // Settle the payment
-    const settled = await settlePayment(payment);
+    await settlePayment(payment);
 
     return NextResponse.json({
       status: "completed",
-      payment: settled,
+      message: "Payment processed successfully",
+      orderId,
     });
+
   } catch (error) {
-    console.error("[CashApp payment check error]:", error);
+    if (error instanceof PaymentError) {
+      return NextResponse.json(
+        error.toJSON(),
+        { status: error.statusCode }
+      );
+    }
     
-    const response = error instanceof PaymentError
-      ? error.toJSON()
-      : paymentErrorToResponse(error);
-    
-    const statusCode = error instanceof PaymentError ? error.statusCode : 500;
-    return NextResponse.json(response, { status: statusCode });
+    console.error("[CashApp API] Unhandled error:", error);
+    return NextResponse.json(
+      paymentErrorToResponse(error),
+      { status: 500 }
+    );
   }
 }

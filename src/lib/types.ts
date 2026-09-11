@@ -9,7 +9,7 @@ export type OrderStatus =
   | "refunded"
   | "refilling";
 
-export type DeliverySpeed = "standard" | "fast" | "drip";
+export type DeliverySpeed = "standard" | "fast" | "express" | "drip";
 
 export type QualityTier = "Standard" | "Premium" | "HQ";
 
