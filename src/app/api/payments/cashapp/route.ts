@@ -2,7 +2,7 @@
 import { checkCashAppPayment, getCashAppConfig } from "@/lib/cashapp";
 import { findPaymentByGatewayId, settlePayment } from "@/lib/payments";
 import { PaymentError, PaymentErrorCode, paymentErrorToResponse, validateOrderId } from "@/lib/payment-errors";
-import { withDeduplication } from "@/lib/payment-retry";
+import { withDeduplication } from "@/lib/payment-methods/shared/payment-retry";
 
 /**
  * POST /api/payments/cashapp

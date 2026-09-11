@@ -12,7 +12,7 @@ import {
   matchAmount,
   matchPayment,
   logPaymentMatchDetails,
-} from './src/lib/payment-matching';
+} from './src/lib/payment-methods/shared/payment-matching';
 
 console.log('🧪 CashApp Payment Matching - Test Suite\n');
 
