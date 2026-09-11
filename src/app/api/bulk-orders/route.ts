@@ -56,7 +56,10 @@ export async function POST(request: NextRequest) {
         total: order.total,
         delivery: order.delivery || "standard",
         status: "pending",
-        public_id: BULK-(bulkOrder.id.substring(0, 8))-(Math.random().toString(36).substring(2, 8).toUpperCase()),
+        public_id: `BULK-${bulkOrder.id.substring(0, 8)}-${Math.random()
+          .toString(36)
+          .substring(2, 8)
+          .toUpperCase()}`,
       })
     );
 
@@ -65,7 +68,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       bulkOrderId: bulkOrder.id,
-      message: ${"$"}(orders.length) orders created,
+      message: `${orders.length} orders created`,
     });
   } catch (error) {
     console.error("Bulk order error:", error);
@@ -105,7 +108,7 @@ export async function GET(request: NextRequest) {
       const { data: childOrders, error: childError } = await supabase
         .from("orders")
         .select("*")
-        .filter("public_id", "like", BULK-(bulkOrderId.substring(0, 8))%);
+        .filter("public_id", "like", `BULK-${bulkOrderId.substring(0, 8)}%`);
 
       if (childError) throw childError;
 

@@ -18,7 +18,7 @@ async function getAuthUser(request: NextRequest) {
 
 // Generate unique referral code
 function generateReferralCode(): string {
-  return REF-(Math.random().toString(36).substring(2, 8).toUpperCase());
+  return `REF-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 }
 
 export async function POST(request: NextRequest) {
