@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     const dedupKey = `cashapp-check-${orderId}`;
     const amount = typeof payment.amount === 'string' ? parseFloat(payment.amount) : payment.amount;
     const result = await withDeduplication(dedupKey, () =>
-      checkCashAppPayment(config as any, orderId, amount)
+      checkCashAppPayment(config as any, orderId, amount as number)
     );
 
     if (!result || !(result as any).found) {
