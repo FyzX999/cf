@@ -107,6 +107,11 @@ function mergeStore(raw: Partial<AdminStore> | null | undefined): AdminStore {
   
   console.log('[mergeStore] raw.settings:', JSON.stringify(raw.settings));
   console.log('[mergeStore] mergedSettings.baseOrderCount:', mergedSettings.baseOrderCount);
+
+  // Safeguard: ensure express is always present
+  if (!mergedSettings.deliveryMultipliers.express) {
+    mergedSettings.deliveryMultipliers.express = base.settings.deliveryMultipliers.express;
+  }
   
   return {
     settings: mergedSettings,
