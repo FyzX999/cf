@@ -101,7 +101,7 @@ function mergeStore(raw: Partial<AdminStore> | null | undefined): AdminStore {
     ...raw.settings,
     deliveryMultipliers: {
       ...base.settings.deliveryMultipliers,
-      ...raw.settings?.deliveryMultipliers
+      ...(raw.settings?.deliveryMultipliers || {})
     }
   };
   
@@ -317,4 +317,5 @@ export async function replyTicket(id: string, body: string, status?: StoredTicke
   if (!found) throw new Error("Ticket not found");
   return found;
 }
+
 
