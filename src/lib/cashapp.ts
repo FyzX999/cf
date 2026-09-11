@@ -69,27 +69,8 @@ export function parseCashAppEmail(html: string, plainText: string = ''): { amoun
       return null;
     }
 
-    // Find recipient - in this case, it's the receiving cashtag or we get it from config
-    // The email says "For CF689836" but doesn't have a cashtag to verify
-    // So we just use the configured cashtag from environment
+    // Find recipient - use the configured cashtag from environment
     const recipient = process.env.CASHAPP_TAG?.toLowerCase() || 'cashapp';
-    
-    // Find sender - looking for plain text sender name (FyzX, etc.)
-    let sender: string | null = null;
-    
-    // Try to find sender from "FyzX" pattern or cashtag patterns
-    const senderNamePatterns = [
-      /(?:from|by)\s+(\w+)/i, // Plain text like "from FyzX"
-      /(?:from|by)\s+(\$[a-zA-Z0-9_]+)/i, // Cashtag like "from $FyzX"
-    ];
-    
-    for (const pattern of senderNamePatterns) {
-      const match = allText.match(pattern);
-      if (match) {
-        sender = match[1].toLowerCase();
-        break;
-      }
-    }
 
     // STRICT RULE 2: Find note - MUST match CF followed by numbers (e.g., CF200265)
     let note: string | null = null;
