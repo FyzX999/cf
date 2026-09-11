@@ -1,15 +1,24 @@
-import { createClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
-import { getAuth } from "@/lib/admin-auth";
+﻿import { createClient } from "@supabase/supabase-js";
+import { NextResponse, NextRequest } from "next/server";
+import { isValidAdminSession, adminCookieName } from "@/lib/admin-auth";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function POST(request: Request) {
+// Get user from auth cookie
+async function getAuthUser(request: NextRequest) {
+  const token = request.cookies.get(adminCookieName())?.value;
+  if (!token || !(await isValidAdminSession(token))) {
+    return null;
+  }
+  return { authenticated: true };
+}
+
+export async function POST(request: NextRequest) {
   try {
-    const auth = await getAuth();
+    const auth = await getAuthUser(request);
     if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -23,11 +32,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create bulk order record
     const { data: bulkOrder, error: createError } = await supabase
       .from("bulk_orders")
       .insert({
-        user_id: auth.sub,
         name,
         total_orders: orders.length,
         total_amount,
@@ -39,11 +46,8 @@ export async function POST(request: Request) {
 
     if (createError) throw createError;
 
-    // Create individual orders asynchronously
-    // (In production, use a queue system like Resend or Bull)
     const orderPromises = orders.map((order: any) =>
       supabase.from("orders").insert({
-        user_id: auth.sub,
         service_id: order.service_id,
         service_name: order.service_name,
         platform: order.platform,
@@ -52,10 +56,7 @@ export async function POST(request: Request) {
         total: order.total,
         delivery: order.delivery || "standard",
         status: "pending",
-        public_id: `BULK-${bulkOrder.id.substring(0, 8)}-${Math.random()
-          .toString(36)
-          .substring(2, 8)
-          .toUpperCase()}`,
+        public_id: BULK-(bulkOrder.id.substring(0, 8))-(Math.random().toString(36).substring(2, 8).toUpperCase()),
       })
     );
 
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       bulkOrderId: bulkOrder.id,
-      message: `${orders.length} orders created`,
+      message: ${"$"}(orders.length) orders created,
     });
   } catch (error) {
     console.error("Bulk order error:", error);
@@ -75,9 +76,9 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const auth = await getAuth();
+    const auth = await getAuthUser(request);
     if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -86,12 +87,10 @@ export async function GET(request: Request) {
     const bulkOrderId = url.searchParams.get("id");
 
     if (bulkOrderId) {
-      // Get specific bulk order with its child orders
       const { data: bulkOrder, error: bulkError } = await supabase
         .from("bulk_orders")
         .select("*")
         .eq("id", bulkOrderId)
-        .eq("user_id", auth.sub)
         .single();
 
       if (bulkError) throw bulkError;
@@ -103,11 +102,10 @@ export async function GET(request: Request) {
         );
       }
 
-      // Get child orders
       const { data: childOrders, error: childError } = await supabase
         .from("orders")
         .select("*")
-        .filter("public_id", "like", `BULK-${bulkOrderId.substring(0, 8)}%`);
+        .filter("public_id", "like", BULK-(bulkOrderId.substring(0, 8))%);
 
       if (childError) throw childError;
 
@@ -119,11 +117,9 @@ export async function GET(request: Request) {
         ).length,
       });
     } else {
-      // Get all bulk orders for user
       const { data, error } = await supabase
         .from("bulk_orders")
         .select("*")
-        .eq("user_id", auth.sub)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

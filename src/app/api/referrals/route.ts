@@ -1,34 +1,41 @@
-import { createClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
-import { getAuth } from "@/lib/admin-auth";
+﻿import { createClient } from "@supabase/supabase-js";
+import { NextResponse, NextRequest } from "next/server";
+import { isValidAdminSession, adminCookieName } from "@/lib/admin-auth";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Generate unique referral code
-function generateReferralCode(): string {
-  return `REF-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+// Get user from auth cookie
+async function getAuthUser(request: NextRequest) {
+  const token = request.cookies.get(adminCookieName())?.value;
+  if (!token || !(await isValidAdminSession(token))) {
+    return null;
+  }
+  return { authenticated: true };
 }
 
-export async function POST(request: Request) {
+// Generate unique referral code
+function generateReferralCode(): string {
+  return REF-(Math.random().toString(36).substring(2, 8).toUpperCase());
+}
+
+export async function POST(request: NextRequest) {
   try {
-    const auth = await getAuth();
+    const auth = await getAuthUser(request);
     if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { action } = await request.json();
+    const { action, referral_code } = await request.json();
 
     if (action === "create") {
-      // Create referral code for current user
       const code = generateReferralCode();
 
       const { data, error } = await supabase
         .from("referrals")
         .insert({
-          referrer_id: auth.sub,
           referral_code: code,
           status: "active",
           commission_rate: 10.0,
@@ -41,9 +48,6 @@ export async function POST(request: Request) {
     }
 
     if (action === "claim") {
-      // Claim referral by code
-      const { referral_code } = await request.json();
-
       const { data: referral, error: refError } = await supabase
         .from("referrals")
         .select("*")
@@ -57,11 +61,9 @@ export async function POST(request: Request) {
         );
       }
 
-      // Update referral with referred user
       const { error: updateError } = await supabase
         .from("referrals")
         .update({
-          referred_user_id: auth.sub,
           status: "active",
           uses: (referral.uses || 0) + 1,
         })
@@ -88,9 +90,9 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const auth = await getAuth();
+    const auth = await getAuthUser(request);
     if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -99,11 +101,9 @@ export async function GET(request: Request) {
     const type = url.searchParams.get("type");
 
     if (type === "code") {
-      // Get user's referral codes
       const { data, error } = await supabase
         .from("referrals")
         .select("*")
-        .eq("referrer_id", auth.sub)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -111,16 +111,13 @@ export async function GET(request: Request) {
     }
 
     if (type === "commissions") {
-      // Get user's earned commissions
       const { data, error } = await supabase
         .from("referral_commissions")
-        .select("*, orders(public_id, total, service_name)")
-        .eq("referrer_id", auth.sub)
+        .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      // Calculate totals
       const totals = {
         earned: 0,
         paid: 0,
