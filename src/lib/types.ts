@@ -96,6 +96,7 @@ export type SiteSettings = {
   deliveryMultipliers: {
     standard: number;
     fast: number;
+    express: number;
     drip: number;
   };
   autoSyncProviderCost: boolean;

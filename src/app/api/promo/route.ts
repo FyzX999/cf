@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     code?: string;
     serviceId?: string;
     quantity?: number;
-    delivery?: "standard" | "fast" | "drip";
+    delivery?: "standard" | "fast" | "express" | "drip";
   };
   const code = String(body.code || "");
   const promo = await findPromo(code);

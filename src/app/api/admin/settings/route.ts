@@ -36,6 +36,7 @@ export async function PUT(req: Request) {
       deliveryMultipliers: {
         standard: Number(body.deliveryMultipliers?.standard || 1),
         fast: Number(body.deliveryMultipliers?.fast || 1.35),
+        express: Number(body.deliveryMultipliers?.express || 1.5),
         drip: Number(body.deliveryMultipliers?.drip || 1.15)
       }
     };

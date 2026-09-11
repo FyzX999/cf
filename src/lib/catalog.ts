@@ -158,7 +158,7 @@ export function calcPrice(
   ratePerThousand: number,
   quantity: number,
   delivery: "standard" | "fast" | "express" | "drip" = "standard",
-  multipliers: DeliveryMultipliers = { standard: 1, fast: 1.35, drip: 1.15 },
+  multipliers: DeliveryMultipliers = { standard: 1, fast: 1.35, express: 1.5, drip: 1.15 },
 ) {
   return Number(((ratePerThousand * quantity) / 1000) * (multipliers[delivery] ?? 1));
 }
