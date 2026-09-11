@@ -99,7 +99,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                     const plainText = parsed.text || '';
                     
                     // Use strict parser from cashapp.ts
-                    const paymentData = parseCashAppEmail(html, plainText);
+                    const paymentData = await parseCashAppEmail(html, plainText);
 
                     emails.push({
                       date: parsed.date,

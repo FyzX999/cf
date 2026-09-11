@@ -15,10 +15,10 @@ export const CASHAPP_PATTERNS = {
   AMOUNT_REGEX: /You were sent \$(\d+(?:\.\d{1,2})?)/i,
   NOTE_REGEX: /\bCF(\d{6,})\b/i,
   CF_PATTERNS: [
-    /\bCF(\d{6,})\b/i,
-    /For[:\s]+CF(\d{6,})\b/i,
-    /Note[:\s]+CF(\d{6,})\b/i,
-    /Memo[:\s]+CF(\d{6,})\b/i,
+    /\b(CF\d{6})\b/i,           // Standalone CF689836
+    /For:?\s*(CF\d{6})\b/i,     // "For CF689836" or "For: CF689836"
+    /Note:?\s*(CF\d{6})\b/i,    // "Note CF689836" or "Note: CF689836"
+    /Memo:?\s*(CF\d{6})\b/i,    // "Memo CF689836" or "Memo: CF689836"
   ],
   RECIPIENT_PATTERNS: [
     /(?:to|paid)\s+(\$[a-zA-Z0-9_]+)/i,

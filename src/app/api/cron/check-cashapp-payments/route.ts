@@ -79,7 +79,7 @@ async function fetchCashAppEmails(config: any): Promise<EmailPayment[]> {
                   const plainText = parsed.text || '';
                   
                   // Use the strict parser from cashapp.ts
-                  const paymentData = parseCashAppEmail(html, plainText);
+                  const paymentData = await parseCashAppEmail(html, plainText);
 
                   if (paymentData) {
                     const payment: EmailPayment = {

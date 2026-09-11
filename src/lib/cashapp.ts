@@ -5,6 +5,7 @@ import { CASHAPP_PATTERNS, IMAP_CONFIG, PAYMENT_VALIDATION } from './payment-con
 import { PaymentError, PaymentErrorCode } from './payment-errors';
 import { retryWithBackoff } from './payment-retry';
 import { matchPayment, logPaymentMatchDetails } from './payment-matching';
+import { queueUnmatchedPayment } from './payment-review-queue';
 
 export interface CashAppPayment {
   amount: number;
@@ -29,10 +30,23 @@ export interface CashAppConfig {
  * STRICT VALIDATION: Only accepts emails with "You were sent" phrase and CF-formatted notes
  * EXPORTED: Use this for all CashApp email parsing to ensure consistency
  */
-export function parseCashAppEmail(html: string, plainText: string = '', emailSubject?: string): { amount: number; note: string; recipient: string; sender?: string } | null {
+export async function parseCashAppEmail(html: string, plainText: string = '', emailSubject?: string): Promise<{ amount: number; note: string; recipient: string; sender?: string } | null> {
   try {
     const $ = cheerio.load(html);
-    const allText = $.text() + ' ' + plainText;
+    
+    // HTML SANITIZATION: Strip all HTML tags and normalize whitespace
+    const sanitizedHtml = html
+      .replace(/<[^>]*>?/gm, ' ')           // Remove all HTML tags
+      .replace(/&nbsp;/g, ' ')              // Replace HTML entities
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/\s+/g, ' ')                 // Normalize multiple spaces to single space
+      .trim();
+    
+    const allText = sanitizedHtml + ' ' + $.text() + ' ' + plainText;
+    
+    console.log(`[CashApp Parser] Processing email (sanitized text length: ${sanitizedHtml.length})`);
     
     // STRICT RULE 1: Must contain "You were sent" - reject "You paid"
     if (!allText.includes(CASHAPP_PATTERNS.RECEIVED_PHRASE)) {
@@ -40,16 +54,19 @@ export function parseCashAppEmail(html: string, plainText: string = '', emailSub
       // Log raw HTML for emails that look like payments but aren't parsing
       if (emailSubject && (emailSubject.includes('Payment') || emailSubject.includes('sent'))) {
         console.log('[CashApp Parser] 📧 Raw HTML for debugging (looks like payment but failed to parse):');
-        console.log(html.substring(0, 2000)); // Log first 2000 chars
+        console.log(sanitizedHtml.substring(0, 2000)); // Log sanitized version
       }
       return null;
     }
     
     console.log('[CashApp Parser] ✅ Validated: Contains "You were sent" phrase');
     
-    // STRICT AMOUNT EXTRACTION: Must match "You were sent $XX.XX" in plain text
+    // Initialize variables that will be populated
     let amount: number | null = null;
+    let note: string | null = null;
+    let recipient: string | null = null;
     
+    // STRICT AMOUNT EXTRACTION: Must match "You were sent $XX.XX" in plain text
     // Primary pattern: "You were sent $XX.XX" or "You were sent $XX"
     const strictAmountPattern = CASHAPP_PATTERNS.AMOUNT_REGEX;
     
@@ -72,67 +89,66 @@ export function parseCashAppEmail(html: string, plainText: string = '', emailSub
     // Validate amount is reasonable
     if (!amount || amount <= 0 || amount >= 10000) {
       console.log(`[CashApp Parser] ❌ Rejected: Invalid or missing amount (got: ${amount})`);
-      // Log raw HTML for debugging
-      if (emailSubject && (emailSubject.includes('Payment') || emailSubject.includes('sent'))) {
-        console.log('[CashApp Parser] 📧 Raw HTML (failed amount extraction):');
-        console.log(html.substring(0, 2000));
-      }
+      // Queue for manual review instead of discarding
+      await queueUnmatchedPayment({
+        subject: emailSubject || 'Unknown',
+        from: 'cash@square.com',
+        date: new Date(),
+        htmlSnippet: sanitizedHtml.substring(0, 2000),
+        extractedData: { amount: amount || undefined, note: note || undefined, recipient: recipient || undefined },
+        reason: `Invalid or missing amount: ${amount}`,
+      }).catch(err => console.error('[CashApp Parser] Failed to queue unmatched payment:', err));
+      
       return null;
     }
 
     // Find recipient - use the configured cashtag from environment
-    const recipient = process.env.CASHAPP_TAG?.toLowerCase() || 'cashapp';
+    recipient = process.env.CASHAPP_TAG?.toLowerCase() || 'cashapp';
 
-    // STRICT RULE 2: Find note - MUST match CF followed by numbers (e.g., CF200265)
-    let note: string | null = null;
-    
-    // Strict CF pattern: CF followed by digits
+    // STRICT RULE 2: Find note - MUST match CF followed by exactly 6 digits
+    // Try each CF pattern on the sanitized text (most reliable after HTML stripping)
     const strictCFPatterns = CASHAPP_PATTERNS.CF_PATTERNS;
     
-    // Try plain text first (most reliable)
+    console.log(`[CashApp Parser] Searching for CF note in sanitized text...`);
+    
     for (const pattern of strictCFPatterns) {
-      const match = plainText.match(pattern);
+      const match = sanitizedHtml.match(pattern);
       if (match) {
-        note = 'CF' + match[1]; // Normalize to uppercase CF
-        console.log(`[CashApp Parser] Found CF note in plain text: ${note}`);
+        // Pattern returns capture group with CF prefix already included
+        note = match[1] || ('CF' + match[1]); // match[1] should be like "CF689836"
+        if (!note.startsWith('CF')) note = 'CF' + note.slice(2); // Normalize if needed
+        console.log(`[CashApp Parser] ✅ Found CF note in sanitized text: ${note} (pattern: ${pattern})`);
         break;
       }
     }
     
-    // Fallback: try HTML text
+    // Fallback: Try plain text
     if (!note) {
+      console.log(`[CashApp Parser] CF note not found in sanitized HTML, trying plain text...`);
       for (const pattern of strictCFPatterns) {
-        const match = allText.match(pattern);
+        const match = plainText.match(pattern);
         if (match) {
-          note = 'CF' + match[1]; // Normalize to uppercase CF
-          console.log(`[CashApp Parser] Found CF note in HTML: ${note}`);
+          note = match[1] || ('CF' + match[1]);
+          if (!note.startsWith('CF')) note = 'CF' + note.slice(2);
+          console.log(`[CashApp Parser] ✅ Found CF note in plain text: ${note}`);
           break;
         }
       }
     }
-    
-    // Also try specific HTML elements
-    if (!note) {
-      $('.profile-description, .text-subtle, [class*="note"], [class*="memo"], [class*="message"]').each((_, elem) => {
-        if (note) return false;
-        const text = $(elem).text().trim();
-        const match = text.match(/\bCF(\d{6,})\b/i); // Strict CF + numbers pattern
-        if (match) {
-          note = 'CF' + match[1]; // Normalize to uppercase CF
-          console.log(`[CashApp Parser] Found CF note in HTML element: ${note}`);
-          return false;
-        }
-      });
-    }
 
     // STRICT: Reject if no CF-formatted note found
     if (!note) {
-      console.log('[CashApp Parser] ❌ Rejected: No CF-formatted note found (e.g., CF123456)');
-      // Log raw HTML for debugging
-      if (emailSubject && (emailSubject.includes('Payment') || emailSubject.includes('sent'))) {
-        console.log('[CashApp Parser] 📧 Raw HTML (failed note extraction):');
-        console.log(html.substring(0, 2000));
-      }
+      console.log('[CashApp Parser] ❌ Rejected: No CF-formatted note found (e.g., CF689836)');
+      // Queue for manual review instead of discarding
+      await queueUnmatchedPayment({
+        subject: emailSubject || 'Unknown',
+        from: 'cash@square.com',
+        date: new Date(),
+        htmlSnippet: sanitizedHtml.substring(0, 2000),
+        extractedData: { amount: amount || undefined, recipient: recipient || undefined },
+        reason: 'No CF-formatted note found (order ID extraction failed)',
+      }).catch(err => console.error('[CashApp Parser] Failed to queue unmatched payment:', err));
+      
       return null;
     }
 
@@ -228,7 +244,7 @@ export async function processUnseenCashAppPayments(
                   console.log(`[CashApp Batch] Email ${i + 1} subject: ${emailData.subject}`);
 
                   // Parse with strict validation
-                  const paymentData = parseCashAppEmail(emailData.html, emailData.plainText);
+                  const paymentData = await parseCashAppEmail(emailData.html, emailData.plainText);
 
                   if (!paymentData) {
                     console.log(`[CashApp Batch] Email ${i + 1}: Skipped (failed strict validation)`);
@@ -477,7 +493,7 @@ export async function checkCashAppPayment(
                   console.log(`[CashApp] Email ${emailCount} subject: ${subject}`);
                   
                   // Parse with strict validation (checks for "You were sent $X.XX" and CF format)
-                  const paymentData = parseCashAppEmail(html, plainText, subject);
+                  const paymentData = await parseCashAppEmail(html, plainText, subject);
 
                   if (!paymentData) {
                     console.log(`[CashApp] Email ${emailCount}: Skipped (failed strict validation)`);
