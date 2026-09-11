@@ -55,10 +55,10 @@ export async function POST(req: NextRequest) {
     // Check payment with retry logic
     const dedupKey = `cashapp-check-${orderId}`;
     const result = await withDeduplication(dedupKey, () =>
-      checkCashAppPayment(config, orderId, payment.amount)
+      checkCashAppPayment(config as any, orderId, payment.amount)
     );
 
-    if (!result.found) {
+    if (!result || !result.found) {
       return NextResponse.json({
         status: "pending",
         message: "Payment not found yet",
