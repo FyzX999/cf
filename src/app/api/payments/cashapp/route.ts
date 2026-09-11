@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       checkCashAppPayment(orderId, Number(payment.amount), config as any)
     );
 
-    if (!result || !(result as any).found) {
+    if (!result) {
       return NextResponse.json({
         status: "pending",
         message: "Payment not found yet",
