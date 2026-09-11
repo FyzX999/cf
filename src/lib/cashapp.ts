@@ -120,10 +120,10 @@ export function parseCashAppEmail(html: string, plainText: string = ''): { amoun
       return null;
     }
 
-    console.log(`[CashApp Parser] ✅ Parsed successfully - Amount: $${amount}, Note: ${note}, Recipient: ${recipient}, Sender: ${sender}`);
+    console.log(`[CashApp Parser] ✅ Parsed successfully - Amount: $${amount}, Note: ${note}, Recipient: ${recipient}`);
 
     if (amount !== null && note && recipient) {
-      return { amount, note, recipient, sender: sender || undefined };
+      return { amount, note, recipient };
     }
 
     return null;
